@@ -1,7 +1,6 @@
 package searchengine.model;
 
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
@@ -9,17 +8,16 @@ import javax.persistence.*;
 @Entity
 @Table(name = "Page",indexes =
 @Index(columnList = "path"))
-@NoArgsConstructor
 @Getter
 @Setter
-public class PageData {
+public class PageTable {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "site_id",nullable = false)
-    private SiteData siteId;
+    private SiteTable siteId;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String path;
@@ -29,6 +27,5 @@ public class PageData {
 
     @Column(columnDefinition = "MEDIUMTEXT",nullable = false)
     private String content;
-
 
 }

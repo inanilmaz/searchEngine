@@ -10,9 +10,9 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        hibernate:
-        ddl-auto: update
-        show-sql: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 
 indexing-settings:
   sites:

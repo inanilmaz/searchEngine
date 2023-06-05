@@ -13,9 +13,7 @@ public class ApiController {
 
     private final StatisticsService statisticsService;
 
-    public ApiController(StatisticsService statisticsService) {
-        this.statisticsService = statisticsService;
-    }
+    public ApiController(StatisticsService statisticsService) {this.statisticsService = statisticsService;}
 
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
@@ -24,6 +22,7 @@ public class ApiController {
     @GetMapping("/startIndexing")
     public ResponseEntity<?> startIndexing(){
 
-        return ResponseEntity.ok().body("null");
+
+        return ResponseEntity.ok().body("true");
     }
 }
