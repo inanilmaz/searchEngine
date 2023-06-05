@@ -20,7 +20,7 @@ public class SiteTable {
     @Column(nullable = false)
     private StatusEnum status;
 
-    @Column(columnDefinition = "DataTime",nullable = false,name = "status_time")
+    @Column(nullable = false,name = "status_time")
     private LocalDateTime statusTime;
 
     @Column(columnDefinition = "TEXT",name = "last_error")

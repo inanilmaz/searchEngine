@@ -2,12 +2,12 @@ package searchengine.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.*;
 
 @Entity
-@Table(name = "Page",indexes =
-@Index(columnList = "path"))
+@Table(name = "Page")
 @Getter
 @Setter
 public class PageTable {
@@ -19,6 +19,7 @@ public class PageTable {
     @JoinColumn(name = "site_id",nullable = false)
     private SiteTable siteId;
 
+    @NaturalId
     @Column(columnDefinition = "TEXT", nullable = false)
     private String path;
 
