@@ -34,8 +34,12 @@ public class ApiController {
         return ResponseEntity.ok(statisticsService.getStatistics());
     }
     @GetMapping("/startIndexing")
-    public ResponseEntity<?> startIndexing() throws IOException, InterruptedException {
-        new ForkJoinPool().invoke(new IndexingService(siteRepositories));
+    public ResponseEntity<?> startIndexing(){
+        SitesList sitesList = new SitesList();
+        for(Site site : sitesList.getSites()){
+            new ForkJoinPool().invoke(new IndexingService(siteRepositories,site));
+        }
+
         return ResponseEntity.ok().body("true");
     }
 }
