@@ -14,6 +14,8 @@ import searchengine.services.IndexingService;
 import searchengine.services.StatisticsService;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import java.io.IOException;
+import java.util.concurrent.ForkJoinPool;
 
 @RestController
 @RequestMapping("/api")
@@ -32,9 +34,8 @@ public class ApiController {
         return ResponseEntity.ok(statisticsService.getStatistics());
     }
     @GetMapping("/startIndexing")
-    public ResponseEntity<?> startIndexing(){
-        IndexingService indexingService = new IndexingService(siteRepositories);
-        indexingService.indexingSite();
+    public ResponseEntity<?> startIndexing() throws IOException, InterruptedException {
+        new ForkJoinPool().invoke(new IndexingService(siteRepositories));
         return ResponseEntity.ok().body("true");
     }
 }
