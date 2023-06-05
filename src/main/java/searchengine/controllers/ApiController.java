@@ -10,7 +10,10 @@ import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.model.SiteTable;
 import searchengine.model.StatusEnum;
 import searchengine.repositories.SiteRepositories;
+import searchengine.services.IndexingService;
 import searchengine.services.StatisticsService;
+
+import javax.persistence.criteria.CriteriaBuilder;
 
 @RestController
 @RequestMapping("/api")
@@ -30,16 +33,8 @@ public class ApiController {
     }
     @GetMapping("/startIndexing")
     public ResponseEntity<?> startIndexing(){
-        SitesList sitesList = new SitesList();
-        for(Site site : sitesList.getSites()){
-            SiteTable siteTable = new SiteTable();
-            siteTable.setName(site.getName());
-            siteTable.setUrl(site.getUrl());
-            siteTable.setStatus(StatusEnum.INDEXED);
-            siteRepositories.delete(siteTable);
-            siteRepositories.save(siteTable);
-
-        }
+        IndexingService indexingService = new IndexingService(siteRepositories);
+        indexingService.indexingSite();
         return ResponseEntity.ok().body("true");
     }
 }
