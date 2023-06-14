@@ -1,5 +1,6 @@
 package searchengine.controllers;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,10 @@ import searchengine.services.IndexingService;
 import searchengine.services.StatisticsService;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ForkJoinPool;
 
 
 @RestController
@@ -34,12 +39,20 @@ public class ApiController {
         return ResponseEntity.ok(statisticsService.getStatistics());
     }
     @GetMapping("/startIndexing")
-    public ResponseEntity<?> startIndexing() throws IOException {
+    public ResponseEntity<?> startIndexing(){
+        Boolean isIndexing = false;
+        Map<String, String> response = new HashMap<>();
         SitesList sitesList = new SitesList();
         for(Site site : sitesList.getSites()){
-            IndexingService indexingService = new IndexingService(siteRepositories,site,pageRepositories);
-            indexingService.startIndexing();
+           isIndexing = new ForkJoinPool().invoke(new IndexingService(siteRepositories,site,pageRepositories));
         }
-        return ResponseEntity.ok().body("true");
+        if(isIndexing){
+            response.put("result",isIndexing.toString());
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }else {
+            response.put("result",isIndexing.toString());
+            response.put("error","Индексация уже запущена");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -16,9 +16,10 @@ import searchengine.repositories.SiteRepositories;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.RecursiveTask;
 
 @Service
-public class IndexingService {
+public class IndexingService extends RecursiveTask<Boolean> {
 
     private final SiteRepositories siteRepositories;
     private final Site site;
@@ -31,12 +32,6 @@ public class IndexingService {
         this.siteRepositories = siteRepositories;
         this.site = site;
         this.pageRepositories = pageRepositories;
-    }
-    public void startIndexing() throws IOException {
-        deleteAllEntries();
-        createNewSite();
-        parsePage();
-
     }
     public void createNewSite(){
         siteTable.setName(site.getName());
@@ -75,26 +70,24 @@ public class IndexingService {
         return modifiedUrl;
     }
 
-    public void crawlPage(int statusCode) {
-        try {
-            Document doc = response.parse();
-            Elements links = doc.select("a[href]");
-            for(Element link : links){
-                String href = link.attr("abs:href");
-                if(checkPage(href,site.getName())){
-                    PageTable pageTable = new PageTable();
-                    pageTable.setSiteId(siteTable);
-                    pageTable.setPath(href.replaceAll(site.getUrl(),""));
-                    pageTable.setContent(doc.getAllElements().toString());
-                    pageTable.setCode(statusCode);
-                    pageRepositories.save(pageTable);
-                    updateDateTime();
-                }
+    public void crawlPage(int statusCode) throws IOException {
+
+        Document doc = response.parse();
+        Elements links = doc.select("a[href]");
+        for(Element link : links){
+            String href = link.attr("abs:href");
+            if(checkPage(href,site.getName())){
+                PageTable pageTable = new PageTable();
+                pageTable.setSiteId(siteTable);
+                pageTable.setPath(href.replaceAll(site.getUrl(),""));
+                pageTable.setContent(doc.getAllElements().toString());
+                pageTable.setCode(statusCode);
+                pageRepositories.save(pageTable);
+                updateDateTime();
             }
-            updateStatusToIndexed();
-        } catch (IOException e) {
-            updateStatusToFailed();
         }
+        updateStatusToIndexed();
+
     }
 
     private void updateStatusToFailed() {
@@ -128,5 +121,20 @@ public class IndexingService {
                 .execute();
         int statusCode = response.statusCode();
         crawlPage(statusCode);
+
+
+    }
+
+    @Override
+    protected Boolean compute() {
+        deleteAllEntries();
+        createNewSite();
+        try {
+            parsePage();
+            return true;
+        } catch (IOException e) {
+            updateStatusToFailed();
+            return false;
+        }
     }
 }
