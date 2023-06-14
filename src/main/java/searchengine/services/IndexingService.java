@@ -24,7 +24,7 @@ public class IndexingService extends RecursiveTask<Boolean> {
     private final SiteRepositories siteRepositories;
     private final Site site;
     private final PageRepositories pageRepositories;
-    private SiteTable siteTable = new SiteTable();
+    private final SiteTable siteTable;
     private Connection.Response response = null;
     private SiteTable updateSiteTable;
 
@@ -32,6 +32,7 @@ public class IndexingService extends RecursiveTask<Boolean> {
         this.siteRepositories = siteRepositories;
         this.site = site;
         this.pageRepositories = pageRepositories;
+        siteTable = new SiteTable();
     }
     public void createNewSite(){
         siteTable.setName(site.getName());
@@ -66,8 +67,7 @@ public class IndexingService extends RecursiveTask<Boolean> {
     }
     public String changeUrl(String url){
         int start = url.indexOf(".");
-        String modifiedUrl = url.substring(start).replaceFirst(".","");
-        return modifiedUrl;
+        return url.substring(start).replaceFirst(".","");
     }
 
     public void crawlPage(int statusCode) throws IOException {
