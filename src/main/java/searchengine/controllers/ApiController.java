@@ -24,12 +24,10 @@ import java.util.concurrent.ForkJoinPool;
 public class ApiController {
     @Autowired
     private StatisticsService statisticsService;
-    @Autowired
-    private  SiteRepositories siteRepositories;
-    @Autowired
-    private  PageRepositories pageRepositories;
     private Boolean isIndexing = false;
     private ForkJoinPool fjp = new ForkJoinPool();
+    @Autowired
+    private SitesList sitesList;
 
 
     @GetMapping("/statistics")
@@ -39,9 +37,8 @@ public class ApiController {
     @GetMapping("/startIndexing")
     public ResponseEntity<?> startIndexing(){
         Map<String, String> response = new HashMap<>();
-        SitesList sitesList = new SitesList();
         for(Site site : sitesList.getSites()){
-           isIndexing = fjp.invoke(new IndexingService(siteRepositories,site,pageRepositories));
+           isIndexing = fjp.invoke(new IndexingService(site));
         }
         if(isIndexing){
             response.put("result",isIndexing.toString());

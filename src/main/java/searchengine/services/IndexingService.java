@@ -5,6 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.model.PageTable;
@@ -21,17 +22,17 @@ import java.util.concurrent.RecursiveTask;
 @Service
 public class IndexingService extends RecursiveTask<Boolean> {
 
-    private final SiteRepositories siteRepositories;
     private final Site site;
-    private final PageRepositories pageRepositories;
     private final SiteTable siteTable;
     private Connection.Response response = null;
     private SiteTable updateSiteTable;
+    @Autowired
+    private  SiteRepositories siteRepositories;
+    @Autowired
+    private  PageRepositories pageRepositories;
 
-    public IndexingService(SiteRepositories siteRepositories, Site site, PageRepositories pageRepositories) {
-        this.siteRepositories = siteRepositories;
+    public IndexingService(Site site) {
         this.site = site;
-        this.pageRepositories = pageRepositories;
         siteTable = new SiteTable();
     }
     public void createNewSite(){
@@ -46,14 +47,10 @@ public class IndexingService extends RecursiveTask<Boolean> {
         List<SiteTable> allSiteTables = siteRepositories.findAll();
         List<PageTable> allPageTables = pageRepositories.findAll();
         for(SiteTable siteTable:allSiteTables){
-            if(siteTable.getName().equals(site.getName())){
-               for(PageTable pageTable : allPageTables){
-                   if(pageTable.getSiteId().equals(siteTable)){
-                       pageRepositories.deleteById(pageTable.getId());
-                   }
-               }
-               siteRepositories.deleteById(siteTable.getId());
+            for(PageTable pageTable : allPageTables) {
+                pageRepositories.deleteById(pageTable.getId());
             }
+               siteRepositories.deleteById(siteTable.getId());
         }
     }
     public boolean checkPage(String href,String url){
@@ -76,7 +73,7 @@ public class IndexingService extends RecursiveTask<Boolean> {
         Elements links = doc.select("a[href]");
         for(Element link : links){
             String href = link.attr("abs:href");
-            if(checkPage(href,site.getName())){
+            if(checkPage(href,site.getUrl())){
                 PageTable pageTable = new PageTable();
                 pageTable.setSiteId(siteTable);
                 pageTable.setPath(href.replaceAll(site.getUrl(),""));

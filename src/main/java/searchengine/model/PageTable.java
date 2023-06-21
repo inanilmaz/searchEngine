@@ -15,7 +15,7 @@ public class PageTable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "site_id",nullable = false)
     private SiteTable siteId;
 

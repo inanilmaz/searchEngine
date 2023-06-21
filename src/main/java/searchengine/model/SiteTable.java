@@ -31,4 +31,5 @@ public class SiteTable {
 
     @Column(columnDefinition = "VARCHAR(255)",nullable = false)
     private String name;
+
 }
