@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.dto.statistics.StatisticsResponse;
-import searchengine.repositories.PageRepositories;
-import searchengine.repositories.SiteRepositories;
-import searchengine.services.IndexingService;
+import searchengine.services.FJPService;
 import searchengine.services.StatisticsService;
 
 import java.util.HashMap;
@@ -38,7 +36,8 @@ public class ApiController {
     public ResponseEntity<?> startIndexing(){
         Map<String, String> response = new HashMap<>();
         for(Site site : sitesList.getSites()){
-           isIndexing = fjp.invoke(new IndexingService(site));
+            FJPService fjpService = new FJPService();
+            isIndexing = fjpService.createFJP(site);
         }
         if(isIndexing){
             response.put("result",isIndexing.toString());
@@ -52,13 +51,14 @@ public class ApiController {
     @GetMapping("/stopIndexing")
     public ResponseEntity<?> stopIndexing(){
         Map<String, String> response = new HashMap<>();
-        if(!isIndexing){
-            fjp.shutdown();
-            response.put("result",isIndexing.toString());
-            response.put("error","Индексация уже запущена");
+        FJPService fjpService = new FJPService();
+        boolean isActive = fjpService.stopFJP();
+        if(isActive){
+            response.put("result", Boolean.toString(isActive));
             return new ResponseEntity<>(response,HttpStatus.OK);
         }else {
-            response.put("result",isIndexing.toString());
+            response.put("result", Boolean.toString(isActive));
+            response.put("error","Индексация не запущена");
             return new ResponseEntity<>(response,HttpStatus.OK);
         }
     }

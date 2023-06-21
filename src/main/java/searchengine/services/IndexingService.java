@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.RecursiveTask;
 
 @Service
-public class IndexingService extends RecursiveTask<Boolean> {
+public class IndexingService extends RecursiveTask<Set<String>> {
 
     private final Site site;
     private final SiteTable siteTable;
@@ -30,6 +30,7 @@ public class IndexingService extends RecursiveTask<Boolean> {
     private  SiteRepositories siteRepositories;
     @Autowired
     private  PageRepositories pageRepositories;
+    private HashSet<String> page = new HashSet<>();
 
     public IndexingService(Site site) {
         this.site = site;
@@ -123,15 +124,15 @@ public class IndexingService extends RecursiveTask<Boolean> {
     }
 
     @Override
-    protected Boolean compute() {
+    protected Set<String> compute() {
         deleteAllEntries();
         createNewSite();
         try {
             parsePage();
-            return true;
+            return page;
         } catch (IOException e) {
             updateStatusToFailed();
-            return false;
+            return new HashSet<>();
         }
     }
     
