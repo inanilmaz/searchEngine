@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.RecursiveTask;
 
 @Service
-public class IndexingService extends RecursiveTask<Set<String>> {
+public class IndexingService extends RecursiveTask<Set<PageTable>> {
 
     private final Site site;
     private final SiteTable siteTable;
@@ -30,7 +30,8 @@ public class IndexingService extends RecursiveTask<Set<String>> {
     private  SiteRepositories siteRepositories;
     @Autowired
     private  PageRepositories pageRepositories;
-    private HashSet<String> page = new HashSet<>();
+    private HashSet<PageTable> pageSet = new HashSet<>();
+
 
     public IndexingService(Site site) {
         this.site = site;
@@ -69,7 +70,6 @@ public class IndexingService extends RecursiveTask<Set<String>> {
     }
 
     public void crawlPage(int statusCode) throws IOException {
-
         Document doc = response.parse();
         Elements links = doc.select("a[href]");
         for(Element link : links){
@@ -80,7 +80,7 @@ public class IndexingService extends RecursiveTask<Set<String>> {
                 pageTable.setPath(href.replaceAll(site.getUrl(),""));
                 pageTable.setContent(doc.getAllElements().toString());
                 pageTable.setCode(statusCode);
-                pageRepositories.save(pageTable);
+                pageSet.add(pageTable);
                 updateDateTime();
             }
         }
@@ -124,12 +124,12 @@ public class IndexingService extends RecursiveTask<Set<String>> {
     }
 
     @Override
-    protected Set<String> compute() {
+    protected Set<PageTable> compute() {
         deleteAllEntries();
         createNewSite();
         try {
             parsePage();
-            return page;
+            return pageSet;
         } catch (IOException e) {
             updateStatusToFailed();
             return new HashSet<>();

@@ -41,11 +41,11 @@ public class ApiController {
         }
         if(isIndexing){
             response.put("result",isIndexing.toString());
-            return new ResponseEntity<>(response,HttpStatus.OK);
-        }else {
-            response.put("result",isIndexing.toString());
             response.put("error","Индексация уже запущена");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }else {
+            response.put("result",isIndexing.toString());
+            return new ResponseEntity<>(response,HttpStatus.OK);
         }
     }
     @GetMapping("/stopIndexing")
