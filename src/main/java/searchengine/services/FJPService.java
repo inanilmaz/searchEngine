@@ -3,6 +3,7 @@ package searchengine.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
+import searchengine.config.SitesList;
 import searchengine.model.PageTable;
 import searchengine.repositories.PageRepositories;
 
@@ -15,15 +16,19 @@ public class FJPService {
     private HashSet<PageTable> page = new HashSet<>();
     @Autowired
     private PageRepositories pageRepositories;
+    @Autowired
+    private SitesList sitesList;
 
-    public boolean createFJP(Site site){
-        fjp.invoke(new IndexingService(site));
-        page.addAll(fjp.invoke(new IndexingService(site)));
-        if(page.isEmpty()){
-            return true;
-        }else {
+    public boolean createFJP(){
+        if(fjp.isShutdown()){
+            for(Site site : sitesList.getSites()) {
+                fjp.invoke(new IndexingService(site));
+                page.addAll(fjp.invoke(new IndexingService(site)));
+            }
             pageRepositories.saveAll(page);
             return false;
+        }else {
+            return true;
         }
     }
     public boolean stopFJP(){

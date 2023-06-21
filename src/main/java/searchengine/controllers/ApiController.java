@@ -24,8 +24,6 @@ public class ApiController {
     private StatisticsService statisticsService;
     private Boolean isIndexing = false;
     private ForkJoinPool fjp = new ForkJoinPool();
-    @Autowired
-    private SitesList sitesList;
 
 
     @GetMapping("/statistics")
@@ -35,10 +33,8 @@ public class ApiController {
     @GetMapping("/startIndexing")
     public ResponseEntity<?> startIndexing(){
         Map<String, String> response = new HashMap<>();
-        for(Site site : sitesList.getSites()){
-            FJPService fjpService = new FJPService();
-            isIndexing = fjpService.createFJP(site);
-        }
+        FJPService fjpService = new FJPService();
+        isIndexing = fjpService.createFJP();
         if(isIndexing){
             response.put("result",isIndexing.toString());
             response.put("error","Индексация уже запущена");
