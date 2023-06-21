@@ -22,8 +22,7 @@ public class FJPService {
     public boolean createFJP(){
         if(fjp.isShutdown()){
             for(Site site : sitesList.getSites()) {
-                fjp.invoke(new IndexingService(site));
-                page.addAll(fjp.invoke(new IndexingService(site)));
+                page.addAll(fjp.invoke(new IndexingService(site,site.getUrl())));
             }
             pageRepositories.saveAll(page);
             return false;

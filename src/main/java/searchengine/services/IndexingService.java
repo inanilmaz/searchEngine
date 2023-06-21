@@ -30,11 +30,14 @@ public class IndexingService extends RecursiveTask<Set<PageTable>> {
     private  SiteRepositories siteRepositories;
     @Autowired
     private  PageRepositories pageRepositories;
+    List<IndexingService> taskList = new ArrayList<>();
     private HashSet<PageTable> pageSet = new HashSet<>();
+    private String pageUrl;
 
 
-    public IndexingService(Site site) {
+    public IndexingService(Site site,String pageUrl) {
         this.site = site;
+        this.pageUrl = pageUrl;
         siteTable = new SiteTable();
     }
     public void createNewSite(){
@@ -46,14 +49,8 @@ public class IndexingService extends RecursiveTask<Set<PageTable>> {
     }
 
     public void deleteAllEntries(){
-        List<SiteTable> allSiteTables = siteRepositories.findAll();
-        List<PageTable> allPageTables = pageRepositories.findAll();
-        for(SiteTable siteTable:allSiteTables){
-            for(PageTable pageTable : allPageTables) {
-                pageRepositories.deleteById(pageTable.getId());
-            }
-               siteRepositories.deleteById(siteTable.getId());
-        }
+        pageRepositories.deleteAll();
+        siteRepositories.deleteAll();
     }
     public boolean checkPage(String href,String url){
         if(href.contains(changeUrl(url))
@@ -81,8 +78,14 @@ public class IndexingService extends RecursiveTask<Set<PageTable>> {
                 pageTable.setContent(doc.getAllElements().toString());
                 pageTable.setCode(statusCode);
                 pageSet.add(pageTable);
+                IndexingService task = new IndexingService(site,href);
+                taskList.add(task);
+                task.fork();
                 updateDateTime();
             }
+        }
+        for(IndexingService indexingService : taskList){
+            indexingService.join();
         }
         updateStatusToIndexed();
 
