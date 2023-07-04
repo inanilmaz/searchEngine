@@ -6,8 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import searchengine.config.Site;
-import searchengine.config.SitesList;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.services.FJPService;
 import searchengine.services.StatisticsService;
@@ -24,6 +22,8 @@ public class ApiController {
     private StatisticsService statisticsService;
     private Boolean isIndexing = false;
     private ForkJoinPool fjp = new ForkJoinPool();
+    @Autowired
+    FJPService fjpService;
 
 
     @GetMapping("/statistics")
@@ -33,7 +33,6 @@ public class ApiController {
     @GetMapping("/startIndexing")
     public ResponseEntity<?> startIndexing(){
         Map<String, String> response = new HashMap<>();
-        FJPService fjpService = new FJPService();
         isIndexing = fjpService.createFJP();
         if(isIndexing){
             response.put("result",isIndexing.toString());
@@ -47,7 +46,6 @@ public class ApiController {
     @GetMapping("/stopIndexing")
     public ResponseEntity<?> stopIndexing(){
         Map<String, String> response = new HashMap<>();
-        FJPService fjpService = new FJPService();
         boolean isActive = fjpService.stopFJP();
         if(isActive){
             response.put("result", Boolean.toString(isActive));

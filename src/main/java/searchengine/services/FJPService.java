@@ -18,20 +18,26 @@ public class FJPService {
     private PageRepositories pageRepositories;
     @Autowired
     private SitesList sitesList;
+    @Autowired
+    private SiteAndPageTableService siteAndPageTableService;
 
-    public boolean createFJP(){
-        if(fjp.isShutdown()){
-            for(Site site : sitesList.getSites()) {
-                page.addAll(fjp.invoke(new IndexingService(site,site.getUrl())));
+
+    public boolean createFJP() {
+        if (!fjp.isShutdown()) {
+            siteAndPageTableService.deleteAllEntries();
+            for (Site site : sitesList.getSites()) {
+                String url = site.getUrl();
+                siteAndPageTableService.createNewSite(site);
+                page.addAll(fjp.invoke(new IndexingService(site, url,siteAndPageTableService)));
             }
             pageRepositories.saveAll(page);
             return false;
-        }else {
+        } else {
             return true;
         }
     }
     public boolean stopFJP(){
-        if(!fjp.isShutdown()){
+        if(fjp.isShutdown()){
             fjp.shutdown();
             return true;
         }else {
