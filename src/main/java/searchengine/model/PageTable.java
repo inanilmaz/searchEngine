@@ -15,18 +15,17 @@ public class PageTable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne(cascade = CascadeType.MERGE,fetch = FetchType.LAZY)
-    @JoinColumn(name = "site_id",nullable = false)
+    @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+    @JoinColumn(name = "site_id", nullable = false)
     private SiteTable siteId;
 
     @NaturalId
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", nullable = false)
     private String path;
 
     @Column(nullable = false)
     private int code;
 
-    @Column(columnDefinition = "MEDIUMTEXT",nullable = false)
+    @Column(columnDefinition = "MEDIUMTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", nullable = false)
     private String content;
-
 }

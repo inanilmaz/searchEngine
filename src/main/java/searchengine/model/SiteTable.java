@@ -20,16 +20,15 @@ public class SiteTable {
     @Column(nullable = false)
     private StatusEnum status;
 
-    @Column(nullable = false,name = "status_time")
+    @Column(nullable = false, name = "status_time")
     private LocalDateTime statusTime;
 
-    @Column(columnDefinition = "TEXT",name = "last_error")
+    @Column(columnDefinition = "TEXT", name = "last_error")
     private String lastError;
 
-    @Column(columnDefinition = "VARCHAR(255)",nullable = false)
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", nullable = false)
     private String url;
 
-    @Column(columnDefinition = "VARCHAR(255)",nullable = false)
+    @Column(columnDefinition = "VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", nullable = false)
     private String name;
-
 }

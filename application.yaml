@@ -5,7 +5,7 @@ spring:
   datasource:
     username: root
     password: 12345
-    url: jdbc:mysql://localhost:3306/search_engine?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/search_engine?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
   jpa:
     properties:
       hibernate:
@@ -16,9 +16,5 @@ spring:
 
 indexing-settings:
   sites:
-    - url: https://www.lenta.ru
-      name: Лента
-    - url: https://www.skillbox.ru
-      name: Skillbox
     - url: https://www.playback.ru
       name: PlayBack.Ru

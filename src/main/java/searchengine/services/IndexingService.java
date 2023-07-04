@@ -9,35 +9,42 @@ import org.springframework.beans.factory.annotation.Autowired;
 import searchengine.config.Site;
 import searchengine.model.PageTable;
 import searchengine.model.SiteTable;
+import searchengine.repositories.PageRepositories;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.RecursiveTask;
 
 
-public class IndexingService extends RecursiveTask<Set<PageTable>> {
+public class IndexingService extends RecursiveTask<Set<String>> {
 
     private final Site site;
     private Connection.Response response = null;
     private SiteTable updateSiteTable;
 
     private List<IndexingService> taskList = new ArrayList<>();
-    private HashSet<PageTable> pageSet = new HashSet<>();
+    private HashSet<String> pageSet = new HashSet<>();
 
     private SiteAndPageTableService siteAndPageTableService;
     private String url;
+    private PageRepositories pageRepositories;
 
 
     public IndexingService(Site site,String url,
-                           SiteAndPageTableService siteAndPageTableService) {
+                           SiteAndPageTableService siteAndPageTableService,PageRepositories pageRepositories) {
         this.siteAndPageTableService = siteAndPageTableService;
         this.url = url;
         this.site = site;
+        this.pageRepositories = pageRepositories;
 
     }
 
     private boolean checkPage(String href, String url) {
-        return href.contains(changeUrl(url)) && !href.contains("#") && !href.contains("pdf") && !href.equals(url);
+
+        return href.contains(changeUrl(url)) &&
+                !href.contains("#") &&
+                !href.contains("pdf") &&
+                !href.equals(url);
     }
     public String changeUrl(String url){
         int start = url.indexOf(".");
@@ -51,11 +58,15 @@ public class IndexingService extends RecursiveTask<Set<PageTable>> {
             String href = link.attr("abs:href");
             if(checkPage(href,site.getUrl())){
                 String content = doc.getAllElements().toString();
-                pageSet.add(siteAndPageTableService.createNewPage(statusCode,href, content));
-                IndexingService task = new IndexingService(site,href,siteAndPageTableService);
-                taskList.add(task);
-                task.fork();
-                siteAndPageTableService.updateDateTime();
+                int sizeSet = pageSet.size();
+                pageSet.add(href);
+                if(sizeSet < pageSet.size()){
+                    pageRepositories.save(siteAndPageTableService.createNewPage(statusCode,href, content));
+                    IndexingService task = new IndexingService(site,href,siteAndPageTableService,pageRepositories);
+                    taskList.add(task);
+                    task.fork();
+                    siteAndPageTableService.updateDateTime();
+                }
             }
         }
         for(IndexingService indexingService : taskList){
@@ -75,7 +86,7 @@ public class IndexingService extends RecursiveTask<Set<PageTable>> {
     }
 
     @Override
-    protected Set<PageTable> compute() {
+    protected Set<String> compute() {
         try {
             parsePage();
             return pageSet;

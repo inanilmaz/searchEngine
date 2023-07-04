@@ -13,7 +13,7 @@ import java.util.concurrent.ForkJoinPool;
 @Service
 public class FJPService {
     private ForkJoinPool fjp = new ForkJoinPool();
-    private HashSet<PageTable> page = new HashSet<>();
+    private HashSet<String> page = new HashSet<>();
     @Autowired
     private PageRepositories pageRepositories;
     @Autowired
@@ -28,9 +28,10 @@ public class FJPService {
             for (Site site : sitesList.getSites()) {
                 String url = site.getUrl();
                 siteAndPageTableService.createNewSite(site);
-                page.addAll(fjp.invoke(new IndexingService(site, url,siteAndPageTableService)));
+                page.addAll(fjp.invoke(new IndexingService(site, url,siteAndPageTableService,
+                        pageRepositories)));
             }
-            pageRepositories.saveAll(page);
+//            pageRepositories.saveAll(page);
             return false;
         } else {
             return true;
