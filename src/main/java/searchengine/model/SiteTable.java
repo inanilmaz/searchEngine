@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 public class SiteTable {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.TABLE)
     @Column(nullable = false)
     private int id;
 

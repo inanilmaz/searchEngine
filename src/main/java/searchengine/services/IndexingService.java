@@ -30,17 +30,16 @@ public class IndexingService extends RecursiveTask<Set<String>> {
     private PageRepositories pageRepositories;
 
 
-    public IndexingService(Site site,String url,
-                           SiteAndPageTableService siteAndPageTableService,PageRepositories pageRepositories) {
+    public IndexingService(Site site, String url, SiteAndPageTableService siteAndPageTableService, PageRepositories pageRepositories,
+                           HashSet<String> pageSet) {
         this.siteAndPageTableService = siteAndPageTableService;
         this.url = url;
         this.site = site;
         this.pageRepositories = pageRepositories;
-
+        this.pageSet = pageSet;
     }
 
     private boolean checkPage(String href, String url) {
-
         return href.contains(changeUrl(url)) &&
                 !href.contains("#") &&
                 !href.contains("pdf") &&
@@ -58,11 +57,12 @@ public class IndexingService extends RecursiveTask<Set<String>> {
             String href = link.attr("abs:href");
             if(checkPage(href,site.getUrl())){
                 String content = doc.getAllElements().toString();
-                int sizeSet = pageSet.size();
+                int previousSize = pageSet.size();
                 pageSet.add(href);
-                if(sizeSet < pageSet.size()){
+                if (pageSet.size() > previousSize) {
                     pageRepositories.save(siteAndPageTableService.createNewPage(statusCode,href, content));
-                    IndexingService task = new IndexingService(site,href,siteAndPageTableService,pageRepositories);
+                    IndexingService task = new IndexingService(site,href,siteAndPageTableService,
+                            pageRepositories,pageSet);
                     taskList.add(task);
                     task.fork();
                     siteAndPageTableService.updateDateTime();

@@ -20,6 +20,7 @@ public class FJPService {
     private SitesList sitesList;
     @Autowired
     private SiteAndPageTableService siteAndPageTableService;
+    private HashSet<String> pageSet = new HashSet<>();
 
 
     public boolean createFJP() {
@@ -29,9 +30,8 @@ public class FJPService {
                 String url = site.getUrl();
                 siteAndPageTableService.createNewSite(site);
                 page.addAll(fjp.invoke(new IndexingService(site, url,siteAndPageTableService,
-                        pageRepositories)));
+                        pageRepositories,pageSet)));
             }
-//            pageRepositories.saveAll(page);
             return false;
         } else {
             return true;
