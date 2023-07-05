@@ -5,9 +5,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.springframework.beans.factory.annotation.Autowired;
 import searchengine.config.Site;
-import searchengine.model.PageTable;
 import searchengine.model.SiteTable;
 import searchengine.repositories.PageRepositories;
 
