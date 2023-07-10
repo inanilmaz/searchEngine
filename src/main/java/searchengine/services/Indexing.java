@@ -42,8 +42,8 @@ public class Indexing extends RecursiveTask<Set<Page>> {
     }
 
     private boolean checkPage(String href, String url) {
-        return
-                href.contains(url.replace("https://www.", "")) &&
+        String domain = url.replace("https://www.", "");
+        return href.contains(domain) &&
                 !href.contains("#") &&
                 !href.contains("pdf") &&
                 !href.equals(url);
