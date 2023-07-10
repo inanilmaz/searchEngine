@@ -1,11 +1,12 @@
-package searchengine.services;
+package searchengine.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
-import searchengine.model.PageTable;
+import searchengine.model.Page;
 import searchengine.repositories.PageRepositories;
+import searchengine.services.Indexing;
 
 import java.util.HashSet;
 import java.util.concurrent.ForkJoinPool;
@@ -13,25 +14,26 @@ import java.util.concurrent.ForkJoinPool;
 @Service
 public class FJPService {
     private ForkJoinPool fjp = new ForkJoinPool();
-    private HashSet<String> page = new HashSet<>();
+    private HashSet<Page> pages = new HashSet<>();
     @Autowired
     private PageRepositories pageRepositories;
     @Autowired
     private SitesList sitesList;
     @Autowired
     private SiteAndPageTableService siteAndPageTableService;
-    private HashSet<String> pageSet = new HashSet<>();
 
 
     public boolean createFJP() {
         if (!fjp.isShutdown()) {
             siteAndPageTableService.deleteAllEntries();
+            HashSet<String> uniqPage = new HashSet<>();
             for (Site site : sitesList.getSites()) {
-                String url = site.getUrl();
+                String url = site.getUrl().replaceFirst("\\.", "");
                 siteAndPageTableService.createNewSite(site);
-                page.addAll(fjp.invoke(new IndexingService(site, url,siteAndPageTableService,
-                        pageRepositories,pageSet)));
+                pages.addAll(fjp.invoke(new Indexing(site, url,siteAndPageTableService,
+                        pages, uniqPage)));
             }
+            pageRepositories.saveAll(pages);
             return false;
         } else {
             return true;

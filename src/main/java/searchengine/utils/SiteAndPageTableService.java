@@ -1,10 +1,9 @@
-package searchengine.services;
+package searchengine.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import searchengine.config.Site;
-import searchengine.model.PageTable;
-import searchengine.model.SiteTable;
+import searchengine.model.Page;
+import searchengine.model.Site;
 import searchengine.model.StatusEnum;
 import searchengine.repositories.PageRepositories;
 import searchengine.repositories.SiteRepositories;
@@ -20,9 +19,9 @@ public class SiteAndPageTableService {
 
     @Autowired
     private PageRepositories pageRepositories;
-    private SiteTable siteTable = new SiteTable();
-    public PageTable createNewPage(int statusCode, String href, String content){
-        PageTable pageTable = new PageTable();
+    private Site siteTable = new Site();
+    public Page createNewPage(int statusCode, String href, String content){
+        Page pageTable = new Page();
         pageTable.setSiteId(siteTable);
         String path = href.replaceAll(siteTable.getUrl(),"");
         pageTable.setPath(path);
@@ -31,7 +30,7 @@ public class SiteAndPageTableService {
         return pageTable;
     }
 
-    public void createNewSite(Site site) {
+    public void createNewSite(searchengine.config.Site site) {
         siteTable.setName(site.getName());
         siteTable.setUrl(site.getUrl());
         siteTable.setStatusTime(LocalDateTime.now());
@@ -56,8 +55,8 @@ public class SiteAndPageTableService {
     }
 
     public void updateStatusToFailed(String errorMessage) {
-        List<SiteTable> allSiteTables = siteRepositories.findAll();
-        for (SiteTable st : allSiteTables) {
+        List<Site> allSiteTables = siteRepositories.findAll();
+        for (Site st : allSiteTables) {
             if (siteTable.getUrl().equals(st.getUrl())) {
                 st.setStatus(StatusEnum.FAILED);
                 st.setLastError(errorMessage);
@@ -67,8 +66,8 @@ public class SiteAndPageTableService {
     }
 
     public void updateDateTime() {
-        List<SiteTable> allSiteTables = siteRepositories.findAll();
-        for (SiteTable st : allSiteTables) {
+        List<Site> allSiteTables = siteRepositories.findAll();
+        for (Site st : allSiteTables) {
             if (siteTable.getUrl().equals(st.getUrl())) {
                 st.setStatusTime(LocalDateTime.now());
                 siteRepositories.save(st);

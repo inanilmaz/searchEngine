@@ -6,21 +6,21 @@ import lombok.Setter;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "IndexTable")
+@Table(name = "SearchIndex")
 @Getter
 @Setter
-public class IndexTable {
+public class SearchIndex {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private int id;
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "page_id",nullable = false)
-    private PageTable pageId;
+    private Page pageId;
     @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "lemma_id",nullable = false)
-    private LemmaTable lemmaId;
-    @Column(nullable = false,columnDefinition = "FLOAT")
+    private Lemma lemmaId;
+    @Column(nullable = false,columnDefinition = "FLOAT",name = "amount")
     private float rank;
 
 }

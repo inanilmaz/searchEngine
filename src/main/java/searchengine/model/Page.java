@@ -10,14 +10,14 @@ import javax.persistence.*;
 @Table(name = "Page")
 @Getter
 @Setter
-public class PageTable {
+public class Page {
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
-    private SiteTable siteId;
+    private Site siteId;
 
     @NaturalId
     @Column(columnDefinition = "TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", nullable = false)

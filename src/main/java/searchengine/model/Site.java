@@ -10,9 +10,9 @@ import java.time.LocalDateTime;
 @Table(name = "Site")
 @Getter
 @Setter
-public class SiteTable {
+public class Site {
     @Id
-    @GeneratedValue(strategy = GenerationType.TABLE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(nullable = false)
     private int id;
 

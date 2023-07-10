@@ -6,68 +6,71 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import searchengine.config.Site;
-import searchengine.model.SiteTable;
-import searchengine.repositories.PageRepositories;
+import searchengine.model.Page;
+import searchengine.utils.SiteAndPageTableService;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.RecursiveTask;
 
 
-public class IndexingService extends RecursiveTask<Set<String>> {
+public class Indexing extends RecursiveTask<Set<Page>> {
 
     private final Site site;
     private Connection.Response response = null;
-    private SiteTable updateSiteTable;
 
-    private List<IndexingService> taskList = new ArrayList<>();
-    private HashSet<String> pageSet = new HashSet<>();
+    private final List<Indexing> taskList = new ArrayList<>();
+    private final HashSet<Page> pageSet;
 
-    private SiteAndPageTableService siteAndPageTableService;
+    private final SiteAndPageTableService siteAndPageTableService;
     private String url;
-    private PageRepositories pageRepositories;
+    private final HashSet<String> uniqPage;
 
 
-    public IndexingService(Site site, String url, SiteAndPageTableService siteAndPageTableService, PageRepositories pageRepositories,
-                           HashSet<String> pageSet) {
+    public Indexing(Site site, String url, SiteAndPageTableService siteAndPageTableService,
+                    HashSet<Page> pageSet, HashSet<String> uniqPage) {
         this.siteAndPageTableService = siteAndPageTableService;
         this.url = url;
         this.site = site;
-        this.pageRepositories = pageRepositories;
         this.pageSet = pageSet;
+        this.uniqPage = uniqPage;
+    }
+    public synchronized void threadSleep(){
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private boolean checkPage(String href, String url) {
-        return href.contains(changeUrl(url)) &&
+        return
+                href.contains(url) &&
                 !href.contains("#") &&
                 !href.contains("pdf") &&
                 !href.equals(url);
     }
-    public String changeUrl(String url){
-        int start = url.indexOf(".");
-        return url.substring(start).replaceFirst(".","");
-    }
+
 
     public void crawlPage(int statusCode) throws IOException {
         Document doc = response.parse();
         Elements links = doc.select("a[href]");
         for(Element link : links){
             String href = link.attr("abs:href");
+            System.out.println(href);
             if(checkPage(href,site.getUrl())){
-                String content = doc.getAllElements().toString();
-                int previousSize = pageSet.size();
-                pageSet.add(href);
-                if (pageSet.size() > previousSize) {
-                    pageRepositories.save(siteAndPageTableService.createNewPage(statusCode,href, content));
-                    IndexingService task = new IndexingService(site,href,siteAndPageTableService,
-                            pageRepositories,pageSet);
+                if(uniqPage.add(href)){
+                    String content = doc.getAllElements().toString();
+                    pageSet.add(siteAndPageTableService.createNewPage(statusCode,href, content));
+                    Indexing task = new Indexing(site,href,siteAndPageTableService
+                            ,pageSet, uniqPage);
                     taskList.add(task);
                     task.fork();
                     siteAndPageTableService.updateDateTime();
                 }
             }
         }
-        for(IndexingService indexingService : taskList){
+        for(Indexing indexingService : taskList){
             indexingService.join();
         }
         siteAndPageTableService.updateStatusToIndexed();
@@ -84,7 +87,7 @@ public class IndexingService extends RecursiveTask<Set<String>> {
     }
 
     @Override
-    protected Set<String> compute() {
+    protected Set<Page> compute() {
         try {
             parsePage();
             return pageSet;
