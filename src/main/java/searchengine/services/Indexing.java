@@ -16,7 +16,6 @@ import java.util.concurrent.RecursiveTask;
 
 public class Indexing extends RecursiveTask<Set<Page>> {
 
-    private final Site site;
     private Connection.Response response = null;
 
     private final List<Indexing> taskList = new ArrayList<>();
@@ -27,11 +26,10 @@ public class Indexing extends RecursiveTask<Set<Page>> {
     private final HashSet<String> uniqPage;
 
 
-    public Indexing(Site site, String url, SiteAndPageTableService siteAndPageTableService,
+    public Indexing(String url, SiteAndPageTableService siteAndPageTableService,
                     HashSet<Page> pageSet, HashSet<String> uniqPage) {
         this.siteAndPageTableService = siteAndPageTableService;
         this.url = url;
-        this.site = site;
         this.pageSet = pageSet;
         this.uniqPage = uniqPage;
     }
@@ -45,7 +43,7 @@ public class Indexing extends RecursiveTask<Set<Page>> {
 
     private boolean checkPage(String href, String url) {
         return
-                href.contains(url) &&
+                href.contains(url.replace("https://www.", "")) &&
                 !href.contains("#") &&
                 !href.contains("pdf") &&
                 !href.equals(url);
@@ -57,12 +55,12 @@ public class Indexing extends RecursiveTask<Set<Page>> {
         Elements links = doc.select("a[href]");
         for(Element link : links){
             String href = link.attr("abs:href");
-            System.out.println(href);
-            if(checkPage(href,site.getUrl())){
+            if(checkPage(href,url)){
+                System.out.println(href);
                 if(uniqPage.add(href)){
                     String content = doc.getAllElements().toString();
                     pageSet.add(siteAndPageTableService.createNewPage(statusCode,href, content));
-                    Indexing task = new Indexing(site,href,siteAndPageTableService
+                    Indexing task = new Indexing(href,siteAndPageTableService
                             ,pageSet, uniqPage);
                     taskList.add(task);
                     task.fork();
@@ -79,7 +77,7 @@ public class Indexing extends RecursiveTask<Set<Page>> {
 
 
     public void parsePage() throws IOException {
-        response = Jsoup.connect(site.getUrl()).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
+        response = Jsoup.connect(url).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
                 .referrer("http://www.google.com")
                 .execute();
         int statusCode = response.statusCode();

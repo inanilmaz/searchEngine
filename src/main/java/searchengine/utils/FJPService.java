@@ -28,9 +28,9 @@ public class FJPService {
             siteAndPageTableService.deleteAllEntries();
             HashSet<String> uniqPage = new HashSet<>();
             for (Site site : sitesList.getSites()) {
-                String url = site.getUrl().replaceFirst("\\.", "");
+                String url = site.getUrl();
                 siteAndPageTableService.createNewSite(site);
-                pages.addAll(fjp.invoke(new Indexing(site, url,siteAndPageTableService,
+                pages.addAll(fjp.invoke(new Indexing(url,siteAndPageTableService,
                         pages, uniqPage)));
             }
             pageRepositories.saveAll(pages);
