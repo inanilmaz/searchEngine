@@ -3,6 +3,9 @@ package searchengine.utils;
 
 import org.apache.lucene.morphology.LuceneMorphology;
 import org.apache.lucene.morphology.russian.RussianLuceneMorphology;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -54,5 +57,10 @@ public class LemmaService {
                 .replaceAll("([^а-я\\s])", " ")
                 .trim()
                 .split("\\s+");
+    }
+    private String clearTagOnHtml(String html){
+        Document doc = Jsoup.parse(html);
+        String text = doc.text();
+        return text;
     }
 }

@@ -5,7 +5,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import searchengine.config.Site;
 import searchengine.model.Page;
 import searchengine.utils.SiteAndPageTableService;
 
