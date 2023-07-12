@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import searchengine.dto.statistics.StatisticsResponse;
+import searchengine.services.ReIndexingPage;
 import searchengine.utils.FJPService;
 import searchengine.services.StatisticsService;
 
+import java.io.IOException;
 
 
 @RestController
@@ -48,9 +50,9 @@ public class ApiController {
         }
     }
     @GetMapping("/indexPage{pageUrl}")
-    public ResponseEntity<?>indexPage(@PathVariable String pageUrl){
-        boolean correctUrl = false;
-        if(correctUrl){
+    public ResponseEntity<?>indexPage(@PathVariable String pageUrl) throws IOException {
+        ReIndexingPage indexingPage = new ReIndexingPage();
+        if(indexingPage.isCorrectUrl(pageUrl)){
             return ResponseEntity.ok().body("{\"result\": true}");
         }else {
             String errorMessage = "Данная страница находится за пределами сайтов," +
