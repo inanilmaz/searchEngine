@@ -16,7 +16,7 @@ public class Lemma {
     private int id;
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id",nullable = false)
-    private Site siteId;
+    private SiteTable siteId;
     @Column(nullable = false,columnDefinition = "VARCHAR(255)")
     private String lemma;
     @Column(nullable = false)

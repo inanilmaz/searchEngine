@@ -29,8 +29,8 @@ public class ApiController {
     }
     @GetMapping("/startIndexing")
     public ResponseEntity<?> startIndexing(){
-        boolean notIndexing = fjpService.createFJP();
-        if(notIndexing){
+        boolean isIndexing = fjpService.createFJP();
+        if(isIndexing){
             String errorMessage = "Индексация уже запущена";
             return ResponseEntity.ok().body("{\"result\": false, \"error\":\""
                     + errorMessage +"\"}");

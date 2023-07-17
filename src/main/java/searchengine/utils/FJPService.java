@@ -8,32 +8,41 @@ import searchengine.model.Page;
 import searchengine.repositories.PageRepositories;
 import searchengine.services.Indexing;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 
 @Service
 public class FJPService {
     private ForkJoinPool fjp = new ForkJoinPool();
-    private HashSet<Page> pages = new HashSet<>();
     @Autowired
     private PageRepositories pageRepositories;
     @Autowired
     private SitesList sitesList;
     @Autowired
     private SiteAndPageTableService siteAndPageTableService;
+    private Map<String,Boolean> indexingStatusMap = new HashMap<>();
 
 
     public boolean createFJP() {
         if (!fjp.isShutdown()) {
+            for(Site site : sitesList.getSites()){
+                indexingStatusMap.put(site.getUrl(),false);
+            }
             siteAndPageTableService.deleteAllEntries();
-            HashSet<String> uniqPage = new HashSet<>();
             for (Site site : sitesList.getSites()) {
                 String url = site.getUrl();
                 siteAndPageTableService.createNewSite(site);
-                pages.addAll(fjp.invoke(new Indexing(url,siteAndPageTableService,
-                        pages, uniqPage)));
+                Boolean isIndexing = fjp.invoke(new Indexing(url, url, siteAndPageTableService,
+                        new HashSet<>(), pageRepositories));
+                if (!isIndexing) {
+                    siteAndPageTableService.updateStatusToFailed(
+                            "Error occurred during indexing.",url);
+                }else {
+                    indexingStatusMap.put(site.getUrl(),true);
+                }
             }
-            pageRepositories.saveAll(pages);
             return false;
         } else {
             return true;
@@ -41,6 +50,12 @@ public class FJPService {
     }
     public boolean stopFJP(){
         if(fjp.isShutdown()){
+            for(String url : indexingStatusMap.keySet()){
+                Boolean isIndexingSuccessful = indexingStatusMap.get(url);
+                if(!isIndexingSuccessful){
+                    siteAndPageTableService.updateStatusToFailed("Индексация остановлена пользователем",url);
+                }
+            }
             fjp.shutdown();
             return true;
         }else {

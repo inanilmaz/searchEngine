@@ -3,7 +3,7 @@ package searchengine.utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.model.Page;
-import searchengine.model.Site;
+import searchengine.model.SiteTable;
 import searchengine.model.StatusEnum;
 import searchengine.repositories.PageRepositories;
 import searchengine.repositories.SiteRepositories;
@@ -19,7 +19,7 @@ public class SiteAndPageTableService {
 
     @Autowired
     private PageRepositories pageRepositories;
-    private Site siteTable = new Site();
+    private SiteTable siteTable = new SiteTable();
     public Page createNewPage(int statusCode, String href, String content){
         Page pageTable = new Page();
         pageTable.setSiteId(siteTable);
@@ -54,20 +54,18 @@ public class SiteAndPageTableService {
         }
     }
 
-    public void updateStatusToFailed(String errorMessage) {
-        List<Site> allSiteTables = siteRepositories.findAll();
-        for (Site st : allSiteTables) {
-            if (siteTable.getUrl().equals(st.getUrl())) {
-                st.setStatus(StatusEnum.FAILED);
-                st.setLastError(errorMessage);
-                siteRepositories.save(st);
-            }
+    public void updateStatusToFailed(String errorMessage, String siteUrl) {
+        SiteTable site = siteRepositories.findByUrl(siteUrl);
+        if (site != null) {
+            site.setStatus(StatusEnum.FAILED);
+            site.setLastError(errorMessage);
+            siteRepositories.save(site);
         }
     }
 
     public void updateDateTime() {
-        List<Site> allSiteTables = siteRepositories.findAll();
-        for (Site st : allSiteTables) {
+        List<SiteTable> allSiteTables = siteRepositories.findAll();
+        for (SiteTable st : allSiteTables) {
             if (siteTable.getUrl().equals(st.getUrl())) {
                 st.setStatusTime(LocalDateTime.now());
                 siteRepositories.save(st);

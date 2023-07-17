@@ -17,7 +17,7 @@ public class Page {
 
     @ManyToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
     @JoinColumn(name = "site_id", nullable = false)
-    private Site siteId;
+    private SiteTable siteId;
 
     @NaturalId
     @Column(columnDefinition = "TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci", nullable = false)

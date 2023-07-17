@@ -16,5 +16,5 @@ spring:
 
 indexing-settings:
   sites:
-    - url: https://www.playback.ru/
-      name: PlayBack.Ru
+    - url: https://lenta.ru/
+      name: Lenta.ru
