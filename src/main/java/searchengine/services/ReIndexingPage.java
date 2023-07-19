@@ -9,9 +9,11 @@ import searchengine.config.Site;
 import searchengine.config.SitesList;
 import searchengine.model.Lemma;
 import searchengine.model.Page;
+import searchengine.model.SearchIndex;
 import searchengine.model.SiteTable;
 import searchengine.repositories.LemmaRepositories;
 import searchengine.repositories.PageRepositories;
+import searchengine.repositories.SearchIndexRepositories;
 import searchengine.repositories.SiteRepositories;
 import searchengine.utils.CountingLemma;
 
@@ -30,6 +32,8 @@ public class ReIndexingPage {
     private LemmaRepositories lemmaRepositories;
     @Autowired
     private PageRepositories pageRepositories;
+    @Autowired
+    private SearchIndexRepositories searchIndexRepositories;
     private Connection.Response response = null;
     private SiteTable siteTable;
     public boolean isCorrectUrl(String url) throws IOException {
@@ -42,8 +46,8 @@ public class ReIndexingPage {
                 Document doc = response.parse();
                 String htmlContent = doc.getAllElements().toString();
                 siteTable = siteId(site);
-                saveOrUpdatePage(site,htmlContent,url);
-                saveOrUpdateLemma(doc);
+                Page page = saveOrUpdatePage(site,htmlContent,url);
+                saveOrUpdateLemma(doc,page);
                 return true;
             }else {
                 return false;
@@ -51,7 +55,7 @@ public class ReIndexingPage {
         }
         return false;
     }
-    public void saveOrUpdatePage(Site site, String content, String url){
+    public Page saveOrUpdatePage(Site site, String content, String url){
         String path = url.replaceAll(site.getUrl(),"");
         Optional<Page> existingPageOpt  = pageRepositories.findByPath(path);
         if(existingPageOpt.isPresent()){
@@ -61,6 +65,7 @@ public class ReIndexingPage {
             existingPage.setPath(path);
             existingPage.setContent(content);
             pageRepositories.save(existingPage);
+            return existingPage;
         }else {
             Page newPage = new Page();
             newPage.setSiteId(siteTable);
@@ -68,9 +73,10 @@ public class ReIndexingPage {
             newPage.setPath(path);
             newPage.setContent(content);
             pageRepositories.save(newPage);
+            return newPage;
         }
     }
-    public void saveOrUpdateLemma(Document doc) throws IOException {
+    public void saveOrUpdateLemma(Document doc,Page page) throws IOException {
         CountingLemma lemmas = new CountingLemma();
         String htmlText = doc.text();
         Map<String,Integer> lemmasMap = lemmas.getLemmaMap(htmlText);
@@ -79,16 +85,25 @@ public class ReIndexingPage {
             Optional<Lemma> existingLemmaOpt = lemmaRepositories.findByLemma(word);
             if(existingLemmaOpt.isPresent()){
                 Lemma existingLemma = existingLemmaOpt.get();
-                existingLemma.setFrequency(existingLemma.getFrequency() + countLemma);
+                int count = existingLemma.getFrequency() + countLemma;
+                existingLemma.setFrequency(count);
                 lemmaRepositories.save(existingLemma);
+                saveSearchIndex(page,existingLemma,count);
             }else {
                 Lemma newLemma = new Lemma();
                 newLemma.setSiteId(siteTable);
                 newLemma.setFrequency(countLemma);
                 newLemma.setLemma(word);
-
+                saveSearchIndex(page,newLemma,countLemma);
             }
         }
+    }
+    public void saveSearchIndex(Page page,Lemma lemma,int count){
+        SearchIndex searchIndex = new SearchIndex();
+        searchIndex.setPageId(page);
+        searchIndex.setLemmaId(lemma);
+        searchIndex.setRank(count);
+        searchIndexRepositories.save(searchIndex);
     }
     public SiteTable siteId(Site site) {
         List<SiteTable> sites = siteRepositories.findAll();
