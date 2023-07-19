@@ -55,6 +55,7 @@ public class IndexingTask extends RecursiveTask<Boolean> {
             return hrefDomain.equals(baseDomain) &&
                     !href.contains("#") &&
                     !href.endsWith(".pdf") &&
+                    !href.endsWith(".jpg") &&
                     !href.equals(url);
         } catch (Exception e) {
             e.printStackTrace();
@@ -70,15 +71,14 @@ public class IndexingTask extends RecursiveTask<Boolean> {
             if (checkPage(href, url) && uniqPage.add(href)) {
                 String content = doc.getAllElements().toString();
                 Page page = siteAndPageTableService.createNewPage(statusCode, href, content);
-                if(!page.getPath().equals("")){
-                    pageRepositories.save(page);
-                    IndexingTask task = new IndexingTask(href, this.domain, siteAndPageTableService,
-                            uniqPage, pageRepositories);
-                    task.fork();
-                    task.join();
-                    siteAndPageTableService.updateDateTime();
-                    threadSleep();
-                }
+                pageRepositories.save(page);
+                IndexingTask task = new IndexingTask(href, this.domain,
+                        siteAndPageTableService,
+                        uniqPage, pageRepositories);
+                task.fork();
+                task.join();
+                siteAndPageTableService.updateDateTime();
+                threadSleep();
             }
         }
     }

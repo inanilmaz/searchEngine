@@ -24,6 +24,9 @@ public class SiteAndPageTableService {
         Page pageTable = new Page();
         pageTable.setSiteId(siteTable);
         String path = href.replaceAll(siteTable.getUrl(),"");
+        if(path.equals("")){
+            path = "/";
+        }
         pageTable.setPath(path);
         pageTable.setContent(content);
         pageTable.setCode(statusCode);

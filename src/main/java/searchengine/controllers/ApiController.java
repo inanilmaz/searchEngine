@@ -21,7 +21,8 @@ public class ApiController {
     private StatisticsService statisticsService;
     @Autowired
     Indexing fjpService;
-
+    @Autowired
+    ReIndexingPage indexingPage;
 
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
@@ -51,7 +52,6 @@ public class ApiController {
     }
     @GetMapping("/indexPage{pageUrl}")
     public ResponseEntity<?>indexPage(@PathVariable String pageUrl) throws IOException {
-        ReIndexingPage indexingPage = new ReIndexingPage();
         if(indexingPage.isCorrectUrl(pageUrl)){
             return ResponseEntity.ok().body("{\"result\": true}");
         }else {
