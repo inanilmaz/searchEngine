@@ -58,7 +58,7 @@ public class ReIndexingPage {
     public void saveOrUpdateLemma(Document doc) throws IOException {
         CountingLemma lemmas = new CountingLemma();
         String htmlText = doc.text();
-        Map<String,Integer> lemmasMap =lemmas.getLemmaMap(htmlText);
+        Map<String,Integer> lemmasMap = lemmas.getLemmaMap(htmlText);
         for(String word : lemmasMap.keySet() ){
             int countLemma = lemmasMap.get(word);
             Optional<Lemma> existingLemmaOpt = lemmaRepositories.findByLemma(word);
@@ -69,7 +69,7 @@ public class ReIndexingPage {
             }else {
                 Lemma newLemma = new Lemma();
                 newLemma.setSiteId(siteTable);
-                newLemma.setFrequency(1);
+                newLemma.setFrequency(countLemma);
                 newLemma.setLemma(word);
 
             }
