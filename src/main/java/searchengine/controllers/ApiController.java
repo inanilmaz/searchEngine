@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.services.ReIndexingPage;
-import searchengine.utils.FJPService;
+import searchengine.services.Indexing;
 import searchengine.services.StatisticsService;
 
 import java.io.IOException;
@@ -20,7 +20,7 @@ public class ApiController {
     @Autowired
     private StatisticsService statisticsService;
     @Autowired
-    FJPService fjpService;
+    Indexing fjpService;
 
 
     @GetMapping("/statistics")
