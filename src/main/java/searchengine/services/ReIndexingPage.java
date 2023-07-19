@@ -11,6 +11,7 @@ import searchengine.model.Lemma;
 import searchengine.model.Page;
 import searchengine.model.SiteTable;
 import searchengine.repositories.LemmaRepositories;
+import searchengine.repositories.PageRepositories;
 import searchengine.repositories.SiteRepositories;
 import searchengine.utils.CountingLemma;
 
@@ -27,6 +28,8 @@ public class ReIndexingPage {
     private SiteRepositories siteRepositories;
     @Autowired
     private LemmaRepositories lemmaRepositories;
+    @Autowired
+    private PageRepositories pageRepositories;
     private Connection.Response response = null;
     private SiteTable siteTable;
     public boolean isCorrectUrl(String url) throws IOException {
@@ -39,7 +42,7 @@ public class ReIndexingPage {
                 Document doc = response.parse();
                 String htmlContent = doc.getAllElements().toString();
                 siteTable = siteId(site);
-                savePage(site,htmlContent,url);
+                saveOrUpdatePage(site,htmlContent,url);
                 saveOrUpdateLemma(doc);
                 return true;
             }else {
@@ -48,12 +51,24 @@ public class ReIndexingPage {
         }
         return false;
     }
-    public void savePage(Site site,String content,String url){
-        Page page = new Page();
-        page.setSiteId(siteTable);
-        page.setCode(response.statusCode());
-        page.setPath(url.replaceAll(site.getUrl(),""));
-        page.setContent(content);
+    public void saveOrUpdatePage(Site site, String content, String url){
+        String path = url.replaceAll(site.getUrl(),"");
+        Optional<Page> existingPageOpt  = pageRepositories.findByPath(path);
+        if(existingPageOpt.isPresent()){
+            Page existingPage = existingPageOpt.get();
+            existingPage.setSiteId(siteTable);
+            existingPage.setCode(response.statusCode());
+            existingPage.setPath(path);
+            existingPage.setContent(content);
+            pageRepositories.save(existingPage);
+        }else {
+            Page newPage = new Page();
+            newPage.setSiteId(siteTable);
+            newPage.setCode(response.statusCode());
+            newPage.setPath(path);
+            newPage.setContent(content);
+            pageRepositories.save(newPage);
+        }
     }
     public void saveOrUpdateLemma(Document doc) throws IOException {
         CountingLemma lemmas = new CountingLemma();
