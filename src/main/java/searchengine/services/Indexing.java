@@ -15,22 +15,26 @@ import java.util.concurrent.ForkJoinPool;
 
 @Service
 public class Indexing {
-    private ForkJoinPool fjp = new ForkJoinPool();
+    private ForkJoinPool fjp;
     @Autowired
     private PageRepositories pageRepositories;
     @Autowired
     private SitesList sitesList;
     @Autowired
     private SiteAndPageTableService siteAndPageTableService;
-    private Map<String,Boolean> indexingStatusMap = new HashMap<>();
+    private Map<String,Boolean> indexingStatusMap;
 
+    public Indexing() {
+        fjp = new ForkJoinPool();
+    }
 
-    public boolean createFJP() {
+    public boolean startIndexing() {
         if (!fjp.isShutdown()) {
+            indexingStatusMap = new HashMap<>();
+            siteAndPageTableService.deleteAllEntries();
             for(Site site : sitesList.getSites()){
                 indexingStatusMap.put(site.getUrl(),false);
             }
-            siteAndPageTableService.deleteAllEntries();
             for (Site site : sitesList.getSites()) {
                 String url = site.getUrl();
                 siteAndPageTableService.createNewSite(site);
@@ -48,19 +52,24 @@ public class Indexing {
             return true;
         }
     }
-    public boolean stopFJP(){
-        if(fjp.isShutdown()){
+    public boolean stopIndexing(){
+        System.out.println("Остановка fjp: " + !fjp.isShutdown());
+        if(!fjp.isShutdown()){
             for(String url : indexingStatusMap.keySet()){
                 Boolean isIndexingSuccessful = indexingStatusMap.get(url);
                 if(!isIndexingSuccessful){
                     siteAndPageTableService.updateStatusToFailed("Индексация остановлена пользователем",url);
                 }
             }
-            fjp.shutdown();
+            fjp.shutdownNow();
+            resetForkJoinPool();
             return true;
         }else {
             return false;
         }
 
+    }
+    public void resetForkJoinPool() {
+        fjp = new ForkJoinPool();
     }
 }

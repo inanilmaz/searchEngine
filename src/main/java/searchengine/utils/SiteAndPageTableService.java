@@ -43,17 +43,11 @@ public class SiteAndPageTableService {
 
     public void deleteAllEntries() {
         if (pageRepositories != null) {
-            long pageCount = pageRepositories.count();
-            if (pageCount > 0) {
-                pageRepositories.deleteAll();
-            }
+            pageRepositories.deleteAll();
         }
 
         if (siteRepositories != null) {
-            long siteCount = siteRepositories.count();
-            if (siteCount > 0) {
-                siteRepositories.deleteAll();
-            }
+            siteRepositories.deleteAll();
         }
     }
 

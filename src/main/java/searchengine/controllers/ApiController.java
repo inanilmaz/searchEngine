@@ -20,7 +20,7 @@ public class ApiController {
     @Autowired
     private StatisticsService statisticsService;
     @Autowired
-    Indexing fjpService;
+    Indexing indexing;
     @Autowired
     ReIndexingPage indexingPage;
 
@@ -30,7 +30,7 @@ public class ApiController {
     }
     @GetMapping("/startIndexing")
     public ResponseEntity<?> startIndexing(){
-        boolean isIndexing = fjpService.createFJP();
+        boolean isIndexing = indexing.startIndexing();
         if(isIndexing){
             String errorMessage = "Индексация уже запущена";
             return ResponseEntity.ok().body("{\"result\": false, \"error\":\""
@@ -41,7 +41,7 @@ public class ApiController {
     }
     @GetMapping("/stopIndexing")
     public ResponseEntity<?> stopIndexing(){
-        boolean isActive = fjpService.stopFJP();
+        boolean isActive = indexing.stopIndexing();
         if(isActive){
             return ResponseEntity.ok().body("{\"result\": true}");
         }else {
