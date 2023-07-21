@@ -22,18 +22,18 @@ public class Indexing {
     private SitesList sitesList;
     @Autowired
     private SiteAndPageTableService siteAndPageTableService;
-    private Map<String,Boolean> indexingStatusMap;
+    private Map<String, Boolean> indexingStatusMap;
 
     public Indexing() {
         fjp = new ForkJoinPool();
+        indexingStatusMap = new HashMap<>();
     }
 
     public boolean startIndexing() {
         if (!fjp.isShutdown()) {
-            indexingStatusMap = new HashMap<>();
             siteAndPageTableService.deleteAllEntries();
-            for(Site site : sitesList.getSites()){
-                indexingStatusMap.put(site.getUrl(),false);
+            for (Site site : sitesList.getSites()) {
+                indexingStatusMap.put(site.getUrl(), false);
             }
             for (Site site : sitesList.getSites()) {
                 String url = site.getUrl();
@@ -42,9 +42,9 @@ public class Indexing {
                         new HashSet<>(), pageRepositories));
                 if (!isIndexing) {
                     siteAndPageTableService.updateStatusToFailed(
-                            "Error occurred during indexing.",url);
-                }else {
-                    indexingStatusMap.put(site.getUrl(),true);
+                            "Error occurred during indexing.", url);
+                } else {
+                    indexingStatusMap.put(site.getUrl(), true);
                 }
             }
             return false;
@@ -52,23 +52,24 @@ public class Indexing {
             return true;
         }
     }
-    public boolean stopIndexing(){
+
+    public boolean stopIndexing() {
         System.out.println("Остановка fjp: " + !fjp.isShutdown());
-        if(!fjp.isShutdown()){
-            for(String url : indexingStatusMap.keySet()){
+        if (!fjp.isShutdown()) {
+            for (String url : indexingStatusMap.keySet()) {
                 Boolean isIndexingSuccessful = indexingStatusMap.get(url);
-                if(!isIndexingSuccessful){
-                    siteAndPageTableService.updateStatusToFailed("Индексация остановлена пользователем",url);
+                if (!isIndexingSuccessful) {
+                    siteAndPageTableService.updateStatusToFailed("Индексация остановлена пользователем", url);
                 }
             }
             fjp.shutdownNow();
             resetForkJoinPool();
             return true;
-        }else {
+        } else {
             return false;
         }
-
     }
+
     public void resetForkJoinPool() {
         fjp = new ForkJoinPool();
     }

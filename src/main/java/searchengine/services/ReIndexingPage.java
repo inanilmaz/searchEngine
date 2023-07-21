@@ -38,7 +38,8 @@ public class ReIndexingPage {
     private SiteTable siteTable;
     public boolean isCorrectUrl(String url) throws IOException {
         for (Site site : sitesList.getSites()) {
-            if (url.contains(site.getUrl()) && !url.equals(site.getUrl())) {
+            System.out.println(site.getUrl());
+            if (url.contains(site.getUrl())) {
                 response = Jsoup.connect(url)
                         .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
                         .referrer("http://www.google.com")
@@ -92,6 +93,7 @@ public class ReIndexingPage {
                 newLemma.setSiteId(siteTable);
                 newLemma.setFrequency(countLemma);
                 newLemma.setLemma(word);
+                lemmaRepositories.save(newLemma);
                 saveSearchIndex(page,newLemma,countLemma);
             }
         }

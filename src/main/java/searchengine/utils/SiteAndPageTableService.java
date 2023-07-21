@@ -19,7 +19,7 @@ public class SiteAndPageTableService {
 
     @Autowired
     private PageRepositories pageRepositories;
-    private SiteTable siteTable = new SiteTable();
+    private final SiteTable siteTable = new SiteTable();
     public Page createNewPage(int statusCode, String href, String content){
         Page pageTable = new Page();
         pageTable.setSiteId(siteTable);
