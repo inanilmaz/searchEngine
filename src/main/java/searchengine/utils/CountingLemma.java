@@ -8,10 +8,7 @@ import org.jsoup.nodes.Document;
 
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 public class CountingLemma {
     private static final String[] particlesNames = new String[]{"МЕЖД", "ПРЕДЛ", "СОЮЗ"};
@@ -37,6 +34,25 @@ public class CountingLemma {
                 lemmas.put(normalWord, lemmas.get(normalWord) + 1);
             } else {
                 lemmas.put(normalWord, 1);
+            }
+        }
+        return lemmas;
+    }
+    public Set<String> getLemmaSet(String text) throws IOException {
+        LuceneMorphology luceneMorph = new RussianLuceneMorphology();
+        String[] textArray = arrayContainsRussianWords(text);
+        HashSet<String> lemmas = new HashSet<>();
+        for (String word : textArray) {
+            if (word.isBlank()) {
+                continue;
+            }
+            List<String> wordBaseForms = luceneMorph.getMorphInfo(word);
+            if (anyWordBaseBelongToParticle(wordBaseForms)) {
+                continue;
+            }
+            List<String> normalForms = luceneMorph.getNormalForms(word);
+            if (!normalForms.isEmpty()) {
+                lemmas.add(normalForms.get(0));
             }
         }
         return lemmas;

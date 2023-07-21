@@ -1,11 +1,14 @@
 package searchengine.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.services.ReIndexingPage;
 import searchengine.services.Indexing;
+import searchengine.services.SearchService;
 import searchengine.services.StatisticsService;
 
 import java.io.IOException;
@@ -20,6 +23,8 @@ public class ApiController {
     Indexing indexing;
     @Autowired
     ReIndexingPage indexingPage;
+    @Autowired
+    SearchService searchService;
 
     @GetMapping("/statistics")
     public ResponseEntity<StatisticsResponse> statistics() {
@@ -60,5 +65,13 @@ public class ApiController {
                     "указанных в конфигурационном файле";
             return ResponseEntity.ok().body("{\"result\": false, \"error\":\"" + errorMessage + "\"}");
         }
+    }
+    @GetMapping("/search")
+    public ResponseEntity<?> search(@PathVariable String query){
+        if (query == null || query.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"result\": false, \"error\": \"Задан пустой поисковый запрос\"}");
+        }
+        return ResponseEntity.ok().body(null);
     }
 }
