@@ -55,11 +55,13 @@ public class SearchService {
             pdList.add(setPageData(si,sortedLemmasByFrequency,maxRelevance));
         }
 
-        setSearchResult();
+        setSearchResult(pdList,matchingSearchIndexes.size());
 
         return searchResult;
     }
-    private void setSearchResult(){
+    private void setSearchResult(List<PageData> pdList,int count){
+        searchResult.setData(pdList);
+        searchResult.setCount(count);
         searchResult.setResult(true);
     }
 
