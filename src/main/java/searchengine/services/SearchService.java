@@ -3,6 +3,7 @@ package searchengine.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.model.Lemma;
+import searchengine.model.PageData;
 import searchengine.model.SearchIndex;
 import searchengine.model.SearchResult;
 import searchengine.repositories.LemmaRepositories;
@@ -48,6 +49,11 @@ public class SearchService {
                 }
             }
         }
+        double maxRelevance = calculateMaxRelevance(matchingSearchIndexes);
+        List<PageData> pdList = new ArrayList<>();
+        for(SearchIndex si : matchingSearchIndexes) {
+            pdList.add(setPageData(si,sortedLemmasByFrequency,maxRelevance));
+        }
 
         setSearchResult();
 
@@ -57,5 +63,42 @@ public class SearchService {
         searchResult.setResult(true);
     }
 
-
+    private PageData setPageData(SearchIndex matchingSearchIndexes,
+                                 Map<String, Integer> sortedLemmasByFrequency,double maxRelevance ){
+        LemmatizationUtils lemmatizationUtils = new LemmatizationUtils();
+        String siteName = matchingSearchIndexes.getPageId().getSiteId().getName();
+        String url = matchingSearchIndexes.getPageId().getPath();
+        String site= matchingSearchIndexes.getPageId().getSiteId().getUrl();
+        String fullText = matchingSearchIndexes.getPageId().getContent();
+        List<String> lemmas = new ArrayList<>(sortedLemmasByFrequency.keySet());
+        String snippet = lemmatizationUtils.getMatchingSnippet(fullText, lemmas);
+        String title = lemmatizationUtils.getTitle(fullText);
+        double absolutRelevance = calculateAbsoluteRelevance(matchingSearchIndexes.getPageId().getId());
+        PageData pageData = new PageData();
+        pageData.setSite(siteName);
+        pageData.setUrl(url);
+        pageData.setSite(site);
+        pageData.setSnippet("<b>" + snippet + "</b>");
+        pageData.setTitle(title);
+        pageData.setRelevance(absolutRelevance/maxRelevance);
+        return pageData;
+    }
+    private Double calculateMaxRelevance(List<SearchIndex> matchingSearchIndexes){
+        double maxRelevance = 0;
+        for(SearchIndex si : matchingSearchIndexes){
+            double rank = si.getRank();
+            if(maxRelevance<rank){
+                maxRelevance = rank;
+            }
+        }
+        return maxRelevance;
+    }
+    private Double calculateAbsoluteRelevance(int id){
+        List<SearchIndex> siList = searchIndexRepositories.findByPageId(id);
+        double absoluteRelevance = 0;
+        for(SearchIndex si:siList){
+            absoluteRelevance += si.getRank();
+        }
+        return absoluteRelevance;
+    }
 }
