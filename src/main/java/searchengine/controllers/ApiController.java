@@ -67,10 +67,17 @@ public class ApiController {
         }
     }
     @GetMapping("/search")
-    public ResponseEntity<?> search(@PathVariable String query){
+    public ResponseEntity<?> search(
+            @RequestParam(required = true) String query,
+            @RequestParam(required = false) String site,
+            @RequestParam(required = false) int offset,
+            @RequestParam(required = false) int limit
+    ){
         if (query == null || query.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"result\": false, \"error\": \"Задан пустой поисковый запрос\"}");
+        }else {
+
         }
         return ResponseEntity.ok().body(null);
     }

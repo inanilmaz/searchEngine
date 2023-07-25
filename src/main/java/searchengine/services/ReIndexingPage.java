@@ -15,7 +15,7 @@ import searchengine.repositories.LemmaRepositories;
 import searchengine.repositories.PageRepositories;
 import searchengine.repositories.SearchIndexRepositories;
 import searchengine.repositories.SiteRepositories;
-import searchengine.utils.CountingLemma;
+import searchengine.utils.LemmatizationUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -76,7 +76,7 @@ public class ReIndexingPage {
         }
     }
     public void saveOrUpdateLemma(Document doc,Page page) throws IOException {
-        CountingLemma lemmas = new CountingLemma();
+        LemmatizationUtils lemmas = new LemmatizationUtils();
         String htmlText = doc.text();
         Map<String,Integer> lemmasMap = lemmas.getLemmaMap(htmlText);
         for(String word : lemmasMap.keySet() ){
