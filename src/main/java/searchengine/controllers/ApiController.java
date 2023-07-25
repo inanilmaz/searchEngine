@@ -1,11 +1,14 @@
 package searchengine.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import searchengine.dto.statistics.StatisticsResponse;
+import searchengine.model.SearchResult;
 import searchengine.services.ReIndexingPage;
 import searchengine.services.Indexing;
 import searchengine.services.SearchService;
@@ -66,19 +69,22 @@ public class ApiController {
             return ResponseEntity.ok().body("{\"result\": false, \"error\":\"" + errorMessage + "\"}");
         }
     }
+    @SneakyThrows
     @GetMapping("/search")
     public ResponseEntity<?> search(
             @RequestParam(required = true) String query,
             @RequestParam(required = false) String site,
             @RequestParam(required = false) int offset,
             @RequestParam(required = false) int limit
-    ){
+    ) {
         if (query == null || query.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"result\": false, \"error\": \"Задан пустой поисковый запрос\"}");
         }else {
-
+            SearchResult result = searchService.performSearch(query);
+            ObjectMapper objectMapper = new ObjectMapper();
+            String jsonResult = objectMapper.writeValueAsString(result);
+            return ResponseEntity.status(HttpStatus.OK).body(jsonResult);
         }
-        return ResponseEntity.ok().body(null);
     }
 }

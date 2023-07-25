@@ -26,7 +26,7 @@ public class SearchService {
         searchResult = new SearchResult();
     }
 
-    private SearchResult performSearch(String query) throws IOException {
+    public SearchResult performSearch(String query) throws IOException {
         List<SearchIndex> matchingSearchIndexes = new ArrayList<>();
         boolean isFirstIteration = true;
         LemmatizationUtils lemma = new LemmatizationUtils();
