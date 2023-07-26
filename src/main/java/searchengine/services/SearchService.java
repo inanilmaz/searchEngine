@@ -2,12 +2,10 @@ package searchengine.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import searchengine.model.Lemma;
-import searchengine.model.PageData;
-import searchengine.model.SearchIndex;
-import searchengine.model.SearchResult;
+import searchengine.model.*;
 import searchengine.repositories.LemmaRepositories;
 import searchengine.repositories.SearchIndexRepositories;
+import searchengine.repositories.SiteRepositories;
 import searchengine.utils.LemmatizationUtils;
 
 import java.io.IOException;
@@ -20,41 +18,53 @@ public class SearchService {
     SearchIndexRepositories searchIndexRepositories;
     @Autowired
     LemmaRepositories lemmaRepositories;
+    @Autowired
+    SiteRepositories siteRepositories;
+
 
 
     public SearchService() {
         searchResult = new SearchResult();
     }
 
-    public SearchResult performSearch(String query) throws IOException {
+    public SearchResult performSearch(String query,String site,Integer offset, Integer limit) throws IOException {
         List<SearchIndex> matchingSearchIndexes = new ArrayList<>();
-        boolean isFirstIteration = true;
-        LemmatizationUtils lemma = new LemmatizationUtils();
-        Map<String,Integer> lemmas = lemma.getLemmaMap(query);
+        List<SearchIndex> tempMatchingIndexes = new ArrayList<>();
+        LemmatizationUtils lemmaUtils = new LemmatizationUtils();
+        Map<String,Integer> lemmas = lemmaUtils.getLemmaMap(query);
+        lemmas.forEach((k,v)-> System.out.println(k + " key " + v + " value"));
         Map<String, Integer> sortedLemmasByFrequency = lemmas.entrySet()
                 .stream()
                 .sorted(Map.Entry.comparingByValue())
                 .collect(LinkedHashMap::new, (map, entry) -> map.put(entry.getKey(), entry.getValue()), LinkedHashMap::putAll);
         for(String word : sortedLemmasByFrequency.keySet()){
-            Optional<Lemma> lemmaRep = lemmaRepositories.findByLemma(word);
-            if(lemmaRep.isPresent()){
-                int lemmaId = lemmaRep.get().getId();
-                List<SearchIndex> lemmaIndexes = searchIndexRepositories.findByLemmaId(lemmaId);
-                if(isFirstIteration){
-                    matchingSearchIndexes.addAll(lemmaIndexes);
-                    isFirstIteration = false;
-                }
-                else{
-                    matchingSearchIndexes.retainAll(lemmaIndexes);
-                }
+            Optional<Lemma> lemmaRep;
+            if(site == null){
+                lemmaRep = lemmaRepositories.findByLemma(word);
+            }else {
+                SiteTable siteTable = siteRepositories.findByUrl(site);
+                lemmaRep = lemmaRepositories.findByLemmaAndSiteId(word,siteTable);
             }
+            if (lemmaRep.isPresent()) {
+                Lemma lemma = lemmaRep.get();
+                List<SearchIndex> lemmaIndexes = searchIndexRepositories.findByLemmaId(lemma);
+                tempMatchingIndexes.addAll(lemmaIndexes);
+            }
+
         }
-        double maxRelevance = calculateMaxRelevance(matchingSearchIndexes);
-        List<PageData> pdList = new ArrayList<>();
-        for(SearchIndex si : matchingSearchIndexes) {
-            pdList.add(setPageData(si,sortedLemmasByFrequency,maxRelevance));
+        if (!tempMatchingIndexes.isEmpty()) {
+            matchingSearchIndexes.addAll(tempMatchingIndexes);
         }
 
+        Map<Integer,Double> relevance = calculateMaxRelevance(matchingSearchIndexes);
+        List<PageData> pdList = new ArrayList<>();
+        int startOffset = Math.max(offset != null ? offset : 0, 0);
+        int endOffset = Math.min(startOffset + (limit != null && limit > 0 ? limit : 20), matchingSearchIndexes.size());
+        for(int i = startOffset ; i<endOffset;i++) {
+            pdList.add(setPageData(matchingSearchIndexes.get(i),
+                    sortedLemmasByFrequency,relevance));
+
+        }
         setSearchResult(pdList,matchingSearchIndexes.size());
 
         return searchResult;
@@ -66,8 +76,10 @@ public class SearchService {
     }
 
     private PageData setPageData(SearchIndex matchingSearchIndexes,
-                                 Map<String, Integer> sortedLemmasByFrequency,double maxRelevance ){
+                                 Map<String, Integer> sortedLemmasByFrequency,
+                                 Map<Integer,Double> relevance){
         LemmatizationUtils lemmatizationUtils = new LemmatizationUtils();
+        double maxRelevance = Collections.max(relevance.values());
         String siteName = matchingSearchIndexes.getPageId().getSiteId().getName();
         String url = matchingSearchIndexes.getPageId().getPath();
         String site= matchingSearchIndexes.getPageId().getSiteId().getUrl();
@@ -75,8 +87,14 @@ public class SearchService {
         List<String> lemmas = new ArrayList<>(sortedLemmasByFrequency.keySet());
         String snippet = lemmatizationUtils.getMatchingSnippet(fullText, lemmas);
         String title = lemmatizationUtils.getTitle(fullText);
-        double absolutRelevance = calculateAbsoluteRelevance(matchingSearchIndexes.getPageId().getId());
         PageData pageData = new PageData();
+        double absolutRelevance = 0;
+        for(Integer pageId : relevance.keySet()){
+            if(matchingSearchIndexes.getPageId().getId() == pageId){
+                absolutRelevance = relevance.get(pageId);
+            }
+        }
+
         pageData.setSite(siteName);
         pageData.setUrl(url);
         pageData.setSite(site);
@@ -85,22 +103,20 @@ public class SearchService {
         pageData.setRelevance(absolutRelevance/maxRelevance);
         return pageData;
     }
-    private Double calculateMaxRelevance(List<SearchIndex> matchingSearchIndexes){
-        double maxRelevance = 0;
-        for(SearchIndex si : matchingSearchIndexes){
-            double rank = si.getRank();
-            if(maxRelevance<rank){
-                maxRelevance = rank;
-            }
-        }
-        return maxRelevance;
+    private Map<Integer,Double> calculateMaxRelevance(List<SearchIndex> matchingSearchIndexes) {
+       Map<Integer,Double> pageRelevenceMap = new HashMap<>();
+       for(SearchIndex si : matchingSearchIndexes){
+           double relevance = si.getRank();
+           int pageId = si.getPageId().getId();
+           if(pageRelevenceMap.containsKey(pageId)){
+               double currentPageRelevance  = pageRelevenceMap.get(pageId);
+               double newPageRelevance = currentPageRelevance + relevance;
+               pageRelevenceMap.put(pageId,newPageRelevance);
+           }else {
+               pageRelevenceMap.put(pageId,relevance);
+           }
+       }
+       return pageRelevenceMap;
     }
-    private Double calculateAbsoluteRelevance(int id){
-        List<SearchIndex> siList = searchIndexRepositories.findByPageId(id);
-        double absoluteRelevance = 0;
-        for(SearchIndex si:siList){
-            absoluteRelevance += si.getRank();
-        }
-        return absoluteRelevance;
-    }
+
 }

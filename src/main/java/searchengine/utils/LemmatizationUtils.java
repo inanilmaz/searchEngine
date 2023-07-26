@@ -62,16 +62,19 @@ public class LemmatizationUtils {
     }
     public String getMatchingSnippet(String fullText, List<String> lemmas) {
         String cleanText = clearTagOnHtml(fullText);
-        Map<String, Integer> matchingLemmas = new HashMap<>();
         String snippet = "";
-        int snippetLength = 200; // Длинна фрагмента.
+        int snippetLength = 200; // Длина фрагмента.
         for (String lemma : lemmas) {
-            if (cleanText.contains(lemma)) {
-                int index = cleanText.indexOf(lemma);
-                int snippetStartIndex = Math.max(0, index - snippetLength / 2);
-                int snippetEndIndex = Math.min(cleanText.length(), index + snippetLength / 2);
-                snippet = cleanText.substring(snippetStartIndex, snippetEndIndex);
-                break;
+            int index = cleanText.indexOf(lemma);
+            if (index != -1) {
+                char prevChar = (index > 0) ? cleanText.charAt(index - 1) : ' ';
+                char nextChar = (index + lemma.length() < cleanText.length()) ? cleanText.charAt(index + lemma.length()) : ' ';
+                if (!Character.isLetter(prevChar) && !Character.isLetter(nextChar)) {
+                    int snippetStartIndex = Math.max(0, index - snippetLength / 2);
+                    int snippetEndIndex = Math.min(cleanText.length(), index + snippetLength / 2);
+                    snippet = cleanText.substring(snippetStartIndex, snippetEndIndex);
+                    break;
+                }
             }
         }
 
@@ -79,7 +82,7 @@ public class LemmatizationUtils {
     }
     public String getTitle(String html){
         Document doc = Jsoup.parse(html);
-        String title = getTitle(html);
+        String title = doc.title();
         return title;
     }
 }

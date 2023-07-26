@@ -74,14 +74,14 @@ public class ApiController {
     public ResponseEntity<?> search(
             @RequestParam(required = true) String query,
             @RequestParam(required = false) String site,
-            @RequestParam(required = false) int offset,
-            @RequestParam(required = false) int limit
+            @RequestParam(required = false) Integer offset,
+            @RequestParam(required = false) Integer limit
     ) {
         if (query == null || query.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"result\": false, \"error\": \"Задан пустой поисковый запрос\"}");
         }else {
-            SearchResult result = searchService.performSearch(query);
+            SearchResult result = searchService.performSearch(query, site, offset, limit);
             ObjectMapper objectMapper = new ObjectMapper();
             String jsonResult = objectMapper.writeValueAsString(result);
             return ResponseEntity.status(HttpStatus.OK).body(jsonResult);
