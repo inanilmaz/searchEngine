@@ -63,23 +63,39 @@ public class LemmatizationUtils {
     public String getMatchingSnippet(String fullText, List<String> lemmas) {
         String cleanText = clearTagOnHtml(fullText);
         String snippet = "";
-        int snippetLength = 200; // Длина фрагмента.
+        List<Integer> indices = new ArrayList<>();
+        int targetLength = 200;
+
         for (String lemma : lemmas) {
             int index = cleanText.indexOf(lemma);
-            if (index != -1) {
-                char prevChar = (index > 0) ? cleanText.charAt(index - 1) : ' ';
-                char nextChar = (index + lemma.length() < cleanText.length()) ? cleanText.charAt(index + lemma.length()) : ' ';
-                if (!Character.isLetter(prevChar) && !Character.isLetter(nextChar)) {
-                    int snippetStartIndex = Math.max(0, index - snippetLength / 2);
-                    int snippetEndIndex = Math.min(cleanText.length(), index + snippetLength / 2);
-                    snippet = cleanText.substring(snippetStartIndex, snippetEndIndex);
-                    break;
-                }
+
+            while (index != -1) {
+                indices.add(index);
+                index = cleanText.indexOf(lemma, index + 1);
             }
         }
 
+        Collections.sort(indices);
+
+        for (int index : indices) {
+            if (index != -1) {
+                int startIndex = Math.max(0, index - targetLength / 2);
+                int endIndex = Math.min(cleanText.length(), index + targetLength / 2);
+
+                while (startIndex > 0 && Character.isLetter(cleanText.charAt(startIndex - 1))) {
+                    startIndex--;
+                }
+                while (endIndex < cleanText.length() - 1 && Character.isLetter(cleanText.charAt(endIndex))) {
+                    endIndex++;
+                }
+
+                snippet = cleanText.substring(startIndex, endIndex);
+                break;
+            }
+        }
         return snippet;
     }
+
     public String getTitle(String html){
         Document doc = Jsoup.parse(html);
         String title = doc.title();
