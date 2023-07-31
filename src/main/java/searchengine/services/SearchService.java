@@ -9,6 +9,7 @@ import searchengine.repositories.SearchIndexRepositories;
 import searchengine.repositories.SiteRepositories;
 import searchengine.search.PageData;
 import searchengine.search.SearchResult;
+import searchengine.utils.FindWordInText;
 import searchengine.utils.LemmatizationUtils;
 
 import java.io.IOException;
@@ -26,11 +27,13 @@ public class SearchService {
     private Integer offset;
     private Integer limit;
     private final LemmatizationUtils lemmatizationUtils;
+    private final FindWordInText findWordInText;
 
 
-    public SearchService() {
+    public SearchService() throws IOException {
         searchResult = new SearchResult();
         lemmatizationUtils = new LemmatizationUtils();
+        findWordInText = new FindWordInText();
     }
 
     public String performSearch(String query, String site, Integer offset, Integer limit) throws IOException {
@@ -63,6 +66,7 @@ public class SearchService {
         Map<Integer, Double> relevance = calculateMaxRelevance(matchingSearchIndexes);
         List<PageData> pdList = setPageData(matchingSearchIndexes,
                 sortedLemmasByFrequency, relevance);
+        Collections.sort(pdList,(pd1,pd2)->Double.compare(pd2.getRelevance(), pd1.getRelevance()));
         setSearchResult(pdList, matchingSearchIndexes.size());
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonResult = objectMapper.writeValueAsString(searchResult);
@@ -92,8 +96,8 @@ public class SearchService {
                 String site = matchingSearchIndexList.get(i).getPageId().getSiteId().getUrl();
                 String fullText = matchingSearchIndexList.get(i).getPageId().getContent();
                 List<String> lemmas = new ArrayList<>(sortedLemmasByFrequency.keySet());
-                String snippet = lemmatizationUtils.getMatchingSnippet(fullText, lemmas);
-                String title = lemmatizationUtils.getTitle(fullText);
+                String snippet = findWordInText.getMatchingSnippet(fullText, lemmas);
+                String title = findWordInText.getTitle(fullText);
                 PageData pageData = new PageData();
                 double absolutRelevance = relevance.getOrDefault(newPageId,0.0);
                 pageData.setSiteName(siteName);
@@ -105,7 +109,6 @@ public class SearchService {
                 pageDataResult.add(pageData);
             }
         }
-
         return pageDataResult;
     }
 

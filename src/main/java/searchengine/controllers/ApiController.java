@@ -74,6 +74,7 @@ public class ApiController {
             @RequestParam(required = false) Integer offset,
             @RequestParam(required = false) Integer limit
     ) {
+        System.out.println(query);
         if (query == null || query.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"result\": false, \"error\": \"Задан пустой поисковый запрос\"}");

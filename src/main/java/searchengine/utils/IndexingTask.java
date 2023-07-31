@@ -97,11 +97,7 @@ public class IndexingTask extends RecursiveTask<Boolean> {
         try {
             Thread.currentThread().setName("MyWorkerThread-" + url);
             String threadName = Thread.currentThread().getName();
-            System.out.println("Thread " + threadName + " is starting");
             parsePage();
-            synchronized (lock) {
-                System.out.println("Thread " + threadName + " has finished.");
-            }
             return true;
         } catch (IOException e) {
             System.out.println("compute exception: " + e);
