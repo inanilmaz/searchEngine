@@ -17,11 +17,10 @@ public class FindWordInText {
     public String getMatchingSnippet(String fullText, List<String> lemmas) {
         String text = clearTagOnHtml(fullText);
         System.out.println(lemmas);
-        System.out.println(text);
-        List<Integer> indexInText = new ArrayList<>();
         String newText = text.toLowerCase(Locale.ROOT).replaceAll("([^а-я\\s])", "").trim();
         String[] words = newText.split("\\s");
 
+        List<Integer> indexInText = new ArrayList<>();
         for (int i = 0; i < words.length; i++) {
             String word = words[i];
             for (String lemma : lemmas) {
@@ -33,34 +32,32 @@ public class FindWordInText {
 
         Collections.sort(indexInText);
 
-        Map<Integer,Integer> countLemmaList = new HashMap<>();
+        int bestStartIndex = 0;
+        int bestEndIndex = 0;
+        int maxLemmas = 0;
 
         for (int i = 0; i < indexInText.size(); i++) {
-            int indexLength = indexInText.get(i) + 150;
-            int bestStartIndexCountLemma = 0;
-            for(int j = i ;j<indexInText.size(); j++){
-                if(indexInText.get(i)<indexLength){
-                    bestStartIndexCountLemma++;
+            int startIndex = indexInText.get(i);
+            int endIndex = startIndex + 150;
+            int nextSpaceIndex = text.indexOf(" ", endIndex);
+            if (nextSpaceIndex != -1) {
+                endIndex = nextSpaceIndex;
+            }
+
+            int currentLemmas = 0;
+            for (String lemma : lemmas) {
+                if (text.toLowerCase().substring(startIndex, endIndex).contains(lemma)) {
+                    currentLemmas++;
                 }
             }
-            countLemmaList.put(indexInText.get(i),bestStartIndexCountLemma);
+            if (currentLemmas > maxLemmas) {
+                maxLemmas = currentLemmas;
+                bestStartIndex = startIndex;
+                bestEndIndex = endIndex;
+            }
         }
-        Map<Integer, Integer> sortedLemmasByCountLemma = countLemmaList.entrySet()
-                .stream()
-                .sorted(Map.Entry.<Integer, Integer>comparingByValue().reversed())
-                .collect(LinkedHashMap::new, (map, entry) -> map.put(entry.getKey(), entry.getValue()), LinkedHashMap::putAll);
-        Set<Integer> keySet = sortedLemmasByCountLemma.keySet();
-        int startIndex = 0;
-        for(int i : keySet){
-            startIndex = i;
-            break;
-        }
-        int endIndex = startIndex + 150;
-        int nextSpaceIndex = text.indexOf(" ", endIndex + 1);
-        if (nextSpaceIndex != -1) {
-            endIndex = nextSpaceIndex;
-        }
-        return text.substring(startIndex,endIndex);
+
+        return text.substring(bestStartIndex, bestEndIndex);
     }
     public String getTitle(String html){
         Document doc = Jsoup.parse(html);
