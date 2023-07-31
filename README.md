@@ -33,8 +33,11 @@
 
 После создания базы данных, отредактируйте файл `application.yaml` в папке `CourseWork`, чтобы указать параметры подключения к вашей базе данных:
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/your_database_name
-spring.datasource.username=your_database_username
-spring.datasource.password=your_database_password
+```yaml
+spring:
+  datasource:
+    username: username
+    password: password
+    url: jdbc:mysql://localhost:3306/your_database_name?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=UTF-8
+
 ```
