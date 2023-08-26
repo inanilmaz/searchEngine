@@ -22,7 +22,6 @@ import java.util.Random;
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
 
-    private final Random random = new Random();
     private final SitesList sites;
     @Autowired
     private PageRepositories  pageRepositories;
@@ -33,12 +32,6 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Override
     public StatisticsResponse getStatistics() {
-        String[] statuses = { "INDEXED", "FAILED", "INDEXING" };
-        String[] errors = {
-                "Ошибка индексации: главная страница сайта не доступна",
-                "Ошибка индексации: сайт не доступен",
-                ""
-        };
 
         TotalStatistics total = new TotalStatistics();
         total.setSites(sites.getSites().size());
