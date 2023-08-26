@@ -40,6 +40,7 @@ public class Indexing {
                 siteAndPageTableService.createNewSite(site);
                 Boolean isIndexing = fjp.invoke(new IndexingTask(url, url, siteAndPageTableService,
                         new HashSet<>(), pageRepositories));
+                siteAndPageTableService.updateStatusToIndexed();
                 if (!isIndexing) {
                     siteAndPageTableService.updateStatusToFailed(
                             "Error occurred during indexing.", url);

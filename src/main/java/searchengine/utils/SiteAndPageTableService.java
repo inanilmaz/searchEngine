@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service;
 import searchengine.model.Page;
 import searchengine.model.SiteTable;
 import searchengine.model.StatusEnum;
+import searchengine.repositories.LemmaRepositories;
 import searchengine.repositories.PageRepositories;
+import searchengine.repositories.SearchIndexRepositories;
 import searchengine.repositories.SiteRepositories;
 
 import java.time.LocalDateTime;
@@ -19,6 +21,10 @@ public class SiteAndPageTableService {
 
     @Autowired
     private PageRepositories pageRepositories;
+    @Autowired
+    private LemmaRepositories lemmaRepositories;
+    @Autowired
+    private SearchIndexRepositories searchIndexRepositories;
     private final SiteTable siteTable = new SiteTable();
     public Page createNewPage(int statusCode, String href, String content){
         Page pageTable = new Page();
@@ -42,6 +48,12 @@ public class SiteAndPageTableService {
     }
 
     public void deleteAllEntries() {
+        if(searchIndexRepositories != null){
+            searchIndexRepositories.deleteAll();
+        }
+        if(lemmaRepositories != null){
+            lemmaRepositories.deleteAll();
+        }
         if (pageRepositories != null) {
             pageRepositories.deleteAll();
         }

@@ -95,8 +95,6 @@ public class IndexingTask extends RecursiveTask<Boolean> {
     @Override
     protected Boolean compute() {
         try {
-            Thread.currentThread().setName("MyWorkerThread-" + url);
-            String threadName = Thread.currentThread().getName();
             parsePage();
             return true;
         } catch (IOException e) {

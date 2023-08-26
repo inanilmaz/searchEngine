@@ -1,6 +1,7 @@
 package searchengine.services;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
@@ -8,6 +9,10 @@ import searchengine.dto.statistics.DetailedStatisticsItem;
 import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.dto.statistics.TotalStatistics;
+import searchengine.model.SiteTable;
+import searchengine.repositories.LemmaRepositories;
+import searchengine.repositories.PageRepositories;
+import searchengine.repositories.SiteRepositories;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +24,12 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     private final Random random = new Random();
     private final SitesList sites;
+    @Autowired
+    private PageRepositories  pageRepositories;
+    @Autowired
+    private LemmaRepositories lemmaRepositories;
+    @Autowired
+    private SiteRepositories siteRepositories;
 
     @Override
     public StatisticsResponse getStatistics() {
@@ -37,17 +48,17 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<Site> sitesList = sites.getSites();
         for(int i = 0; i < sitesList.size(); i++) {
             Site site = sitesList.get(i);
+            SiteTable siteTable = siteRepositories.findByUrl(site.getUrl());
             DetailedStatisticsItem item = new DetailedStatisticsItem();
             item.setName(site.getName());
             item.setUrl(site.getUrl());
-            int pages = random.nextInt(1_000);
-            int lemmas = pages * random.nextInt(1_000);
+            int pages = (int) pageRepositories.count();
+            int lemmas = (int) lemmaRepositories.count();
             item.setPages(pages);
             item.setLemmas(lemmas);
-            item.setStatus(statuses[i % 3]);
-            item.setError(errors[i % 3]);
-            item.setStatusTime(System.currentTimeMillis() -
-                    (random.nextInt(10_000)));
+            item.setStatus(siteTable.getStatus());
+            item.setError(siteTable.getLastError() != null ? siteTable.getLastError() : "Ошибок нет!");
+            item.setStatusTime(siteTable.getStatusTime());
             total.setPages(total.getPages() + pages);
             total.setLemmas(total.getLemmas() + lemmas);
             detailed.add(item);
