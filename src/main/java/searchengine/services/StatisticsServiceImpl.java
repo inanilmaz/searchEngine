@@ -16,8 +16,6 @@ import searchengine.repositories.SiteRepositories;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
 @Service
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
