@@ -4,8 +4,6 @@ package searchengine.utils;
 import org.apache.lucene.morphology.LuceneMorphology;
 import org.apache.lucene.morphology.english.EnglishLuceneMorphology;
 import org.apache.lucene.morphology.russian.RussianLuceneMorphology;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 
 import java.io.IOException;
@@ -80,5 +78,4 @@ public class LemmatizationUtils {
                 .trim()
                 .split("\\s+");
     }
-
 }
