@@ -23,9 +23,11 @@ public class IndexingTask extends RecursiveTask<Boolean> {
     private final String domain;
     private final PageRepositories pageRepositories;
     private static final Object lock = new Object();
+    private volatile boolean shouldStop = false;
 
     public IndexingTask(String url, String domain, SiteAndPageTableService siteAndPageTableService,
-                        HashSet<String> uniqPage, PageRepositories pageRepositories) {
+                        HashSet<String> uniqPage, PageRepositories pageRepositories, boolean shouldStop) {
+        this.shouldStop = shouldStop;
         this.siteAndPageTableService = siteAndPageTableService;
         this.url = url;
         this.uniqPage = uniqPage;
@@ -74,7 +76,7 @@ public class IndexingTask extends RecursiveTask<Boolean> {
                 pageRepositories.save(page);
                 IndexingTask task = new IndexingTask(href, this.domain,
                         siteAndPageTableService,
-                        uniqPage, pageRepositories);
+                        uniqPage, pageRepositories,shouldStop);
                 task.fork();
                 task.join();
                 siteAndPageTableService.updateDateTime();

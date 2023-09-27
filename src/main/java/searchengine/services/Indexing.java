@@ -23,34 +23,37 @@ public class Indexing {
     @Autowired
     private SiteAndPageTableService siteAndPageTableService;
     private Map<String, Boolean> indexingStatusMap;
+    private boolean shouldStop = false;
 
     public Indexing() {
         fjp = new ForkJoinPool();
         indexingStatusMap = new HashMap<>();
     }
 
-    public boolean startIndexing() {
-        if (!fjp.isShutdown()) {
-            siteAndPageTableService.deleteAllEntries();
-            for (Site site : sitesList.getSites()) {
-                indexingStatusMap.put(site.getUrl(), false);
-            }
-            for (Site site : sitesList.getSites()) {
-                String url = site.getUrl();
-                siteAndPageTableService.createNewSite(site);
-                Boolean isIndexing = fjp.invoke(new IndexingTask(url, url, siteAndPageTableService,
-                        new HashSet<>(), pageRepositories));
-                siteAndPageTableService.updateStatusToIndexed();
-                if (!isIndexing) {
-                    siteAndPageTableService.updateStatusToFailed(
-                            "Error occurred during indexing.", url);
-                } else {
-                    indexingStatusMap.put(site.getUrl(), true);
-                }
-            }
+    public boolean isIndexingInProgress() {
+        if(!fjp.isShutdown()){
             return false;
-        } else {
-            return true;
+        }else {
+            return true;}
+    }
+
+    public void startIndexing() {
+        siteAndPageTableService.deleteAllEntries();
+        for (Site site : sitesList.getSites()) {
+            indexingStatusMap.put(site.getUrl(), false);
+        }
+        for (Site site : sitesList.getSites()) {
+            String url = site.getUrl();
+            siteAndPageTableService.createNewSite(site);
+            Boolean isIndexing = fjp.invoke(new IndexingTask(url, url, siteAndPageTableService,
+                    new HashSet<>(), pageRepositories, shouldStop));
+            siteAndPageTableService.updateStatusToIndexed();
+            if (!isIndexing) {
+                siteAndPageTableService.updateStatusToFailed(
+                        "Error occurred during indexing.", url);
+            } else {
+                indexingStatusMap.put(site.getUrl(), true);
+            }
         }
     }
 
@@ -60,13 +63,14 @@ public class Indexing {
             for (String url : indexingStatusMap.keySet()) {
                 Boolean isIndexingSuccessful = indexingStatusMap.get(url);
                 if (!isIndexingSuccessful) {
+                    shouldStop = true;
                     siteAndPageTableService.updateStatusToFailed("Индексация остановлена пользователем", url);
                 }
             }
             fjp.shutdownNow();
             resetForkJoinPool();
             return true;
-        } else {
+        }else {
             return false;
         }
     }

@@ -12,6 +12,7 @@ import searchengine.services.SearchService;
 import searchengine.services.StatisticsService;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 
 @RestController
@@ -33,12 +34,15 @@ public class ApiController {
 
     @GetMapping("/startIndexing")
     public ResponseEntity<?> startIndexing() {
-        boolean isIndexing = indexing.startIndexing();
+        boolean isIndexing = indexing.isIndexingInProgress();
         if (isIndexing) {
             String errorMessage = "Индексация уже запущена";
             return ResponseEntity.ok().body("{\"result\": false, \"error\":\""
                     + errorMessage + "\"}");
         } else {
+            CompletableFuture.runAsync(() -> {
+                indexing.startIndexing();
+            });
             return ResponseEntity.ok().body("{\"result\": true}");
         }
     }

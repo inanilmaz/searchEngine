@@ -27,8 +27,6 @@ public class LemmatizationUtils {
                 continue;
             }
             List<String> ruWordBaseForms = ruLuceneMorph.getMorphInfo(word);
-            List<String> engWordBaseForms = engLuceneMorph.getMorphInfo(word);
-            if(ruWordBaseForms.size()>engWordBaseForms.size()){
                 if(anyWordBaseBelongToParticle(ruWordBaseForms)){
                     continue;
                 }
@@ -42,22 +40,15 @@ public class LemmatizationUtils {
                 } else {
                     lemmas.put(normalWord, 1);
                 }
-            }else{
-                if(anyWordBaseBelongToParticle(engWordBaseForms)){
-                    continue;
-                }
-                List<String> normalForms = engLuceneMorph.getNormalForms(word);
                 if (normalForms.isEmpty()) {
                     continue;
                 }
-                String normalWord = normalForms.get(0);
                 if (lemmas.containsKey(normalWord)) {
                     lemmas.put(normalWord, lemmas.get(normalWord) + 1);
                 } else {
                     lemmas.put(normalWord, 1);
                 }
             }
-        }
         return lemmas;
     }
 
