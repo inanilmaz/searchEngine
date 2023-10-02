@@ -40,7 +40,7 @@ public class SearchService {
         this.offset = offset;
         this.limit = limit;
         List<SearchIndex> matchingSearchIndexes = new ArrayList<>();
-        List<SearchIndex> tempMatchingIndexes = new ArrayList<>();
+        Set<SearchIndex> tempMatchingIndexes = new HashSet<>();
         Map<String, Integer> lemmas = lemmatizationUtils.getLemmaMap(query);
         Map<String, Integer> sortedLemmasByFrequency = lemmas.entrySet()
                 .stream()
@@ -69,6 +69,7 @@ public class SearchService {
         Collections.sort(pdList,(pd1,pd2)->Double.compare(pd2.getRelevance(), pd1.getRelevance()));
         setSearchResult(pdList, matchingSearchIndexes.size());
         ObjectMapper objectMapper = new ObjectMapper();
+        searchResult.getData().forEach(d-> System.out.println(d.getSnippet()));
         String jsonResult = objectMapper.writeValueAsString(searchResult);
         return jsonResult;
     }
@@ -81,8 +82,8 @@ public class SearchService {
     }
 
     private List<PageData> setPageData(List<SearchIndex> matchingSearchIndexList,
-                                 Map<String, Integer> sortedLemmasByFrequency,
-                                 Map<Integer, Double> relevance) {
+                                       Map<String, Integer> sortedLemmasByFrequency,
+                                       Map<Integer, Double> relevance) {
         List<PageData> pageDataResult = new ArrayList<>();
         double maxRelevance = Collections.max(relevance.values());
         int startOffset = Math.max(offset != null ? offset : 0, 0);
@@ -90,7 +91,7 @@ public class SearchService {
         Set<Integer> uniqPageId = new HashSet<>();
         for (int i = startOffset; i < endOffset; i++) {
             int newPageId = matchingSearchIndexList.get(i).getPageId().getId();
-            if(uniqPageId.add(newPageId)){
+            if (uniqPageId.add(newPageId)) {
                 String siteName = matchingSearchIndexList.get(i).getPageId().getSiteId().getName();
                 String url = matchingSearchIndexList.get(i).getPageId().getPath();
                 String site = matchingSearchIndexList.get(i).getPageId().getSiteId().getUrl();
@@ -99,7 +100,7 @@ public class SearchService {
                 String snippet = findWordInText.getMatchingSnippet(fullText, lemmas);
                 String title = findWordInText.getTitle(fullText);
                 PageData pageData = new PageData();
-                double absolutRelevance = relevance.getOrDefault(newPageId,0.0);
+                double absolutRelevance = relevance.getOrDefault(newPageId, 0.0);
                 pageData.setSiteName(siteName);
                 pageData.setUrl(url);
                 pageData.setSite(site);
@@ -111,6 +112,7 @@ public class SearchService {
         }
         return pageDataResult;
     }
+
 
     private Map<Integer, Double> calculateMaxRelevance(List<SearchIndex> matchingSearchIndexes) {
         Map<Integer, Double> pageRelevenceMap = new HashMap<>();

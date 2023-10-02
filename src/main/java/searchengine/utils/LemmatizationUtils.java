@@ -51,7 +51,6 @@ public class LemmatizationUtils {
             }
         return lemmas;
     }
-
     public boolean anyWordBaseBelongToParticle(List<String> wordBaseForms) {
         return wordBaseForms.stream().anyMatch(this::hasParticleProperty);
     }

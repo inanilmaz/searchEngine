@@ -11,5 +11,4 @@ public class SearchResult
     private boolean result;
     private int count;
     private List<PageData> data;
-
 }

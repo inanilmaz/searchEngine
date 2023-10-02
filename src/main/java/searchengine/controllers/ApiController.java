@@ -59,7 +59,7 @@ public class ApiController {
         }
     }
 
-    @GetMapping("/indexPage")
+    @PostMapping("/indexPage")
     public ResponseEntity<?> indexPage(@RequestParam("url") String url) throws IOException {
         System.out.println(url + " pageUrl");
         if (indexingPage.isCorrectUrl(url)) {
@@ -77,13 +77,14 @@ public class ApiController {
             @RequestParam(required = false) String site,
             @RequestParam(required = false) Integer offset,
             @RequestParam(required = false) Integer limit
-    ) {
+    ){
         System.out.println(query);
         if (query == null || query.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"result\": false, \"error\": \"Задан пустой поисковый запрос\"}");
         }else {
             String jsonResult = searchService.performSearch(query, site, offset, limit);
+            System.out.println(jsonResult);
             return ResponseEntity.status(HttpStatus.OK).body(jsonResult);
         }
     }

@@ -74,8 +74,6 @@ public class FindWordInText {
             return false;
         }
         List<String> ruWordBaseForms = lemmatizationUtils.ruLuceneMorph.getMorphInfo(word);
-        List<String> engWordBaseForms = lemmatizationUtils.engLuceneMorph.getMorphInfo(word);
-        if(ruWordBaseForms.size()>engWordBaseForms.size()){
             if(lemmatizationUtils.anyWordBaseBelongToParticle(ruWordBaseForms)){
                 return false;
             }
@@ -84,15 +82,5 @@ public class FindWordInText {
                 return false;
             }
             return normalForms.get(0).equals(lemma);
-        }else {
-            if(lemmatizationUtils.anyWordBaseBelongToParticle(engWordBaseForms)){
-                return false;
-            }
-            List<String> normalForms = lemmatizationUtils.engLuceneMorph.getNormalForms(word);
-            if (normalForms.isEmpty()) {
-                return false;
-            }
-            return normalForms.get(0).equals(lemma);
-        }
     }
 }

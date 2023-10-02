@@ -36,6 +36,7 @@ public class ReIndexingPage {
     private SearchIndexRepositories searchIndexRepositories;
     private Connection.Response response = null;
     private SiteTable siteTable;
+
     public boolean isCorrectUrl(String url) throws IOException {
         for (Site site : sitesList.getSites()) {
             if (url.contains(site.getUrl())) {
@@ -53,10 +54,11 @@ public class ReIndexingPage {
         }
         return false;
     }
-    public Page saveOrUpdatePage(Site site, String content, String url){
-        String path = url.replaceAll(site.getUrl(),"");
-        Optional<Page> existingPageOpt  = pageRepositories.findByPath(path);
-        if(existingPageOpt.isPresent()){
+
+    public Page saveOrUpdatePage(Site site, String content, String url) {
+        String path = url.replaceAll(site.getUrl(), "");
+        Optional<Page> existingPageOpt = pageRepositories.findByPath(path);
+        if (existingPageOpt.isPresent()) {
             Page existingPage = existingPageOpt.get();
             existingPage.setSiteId(siteTable);
             existingPage.setCode(response.statusCode());
@@ -64,7 +66,7 @@ public class ReIndexingPage {
             existingPage.setContent(content);
             pageRepositories.save(existingPage);
             return existingPage;
-        }else {
+        } else {
             Page newPage = new Page();
             newPage.setSiteId(siteTable);
             newPage.setCode(response.statusCode());
@@ -74,36 +76,39 @@ public class ReIndexingPage {
             return newPage;
         }
     }
-    public void saveOrUpdateLemma(Document doc,Page page) throws IOException {
+
+    public void saveOrUpdateLemma(Document doc, Page page) throws IOException {
         LemmatizationUtils lemmas = new LemmatizationUtils();
         String htmlText = doc.text();
-        Map<String,Integer> lemmasMap = lemmas.getLemmaMap(htmlText);
-        for(String word : lemmasMap.keySet() ){
+        Map<String, Integer> lemmasMap = lemmas.getLemmaMap(htmlText);
+        for (String word : lemmasMap.keySet()) {
             int countLemma = lemmasMap.get(word);
             Optional<Lemma> existingLemmaOpt = lemmaRepositories.findByLemma(word);
-            if(existingLemmaOpt.isPresent()){
+            if (existingLemmaOpt.isPresent()) {
                 Lemma existingLemma = existingLemmaOpt.get();
                 int count = existingLemma.getFrequency() + countLemma;
                 existingLemma.setFrequency(count);
                 lemmaRepositories.save(existingLemma);
-                saveSearchIndex(page,existingLemma,count);
-            }else {
+                saveSearchIndex(page, existingLemma, count);
+            } else {
                 Lemma newLemma = new Lemma();
                 newLemma.setSiteId(siteTable);
                 newLemma.setFrequency(countLemma);
                 newLemma.setLemma(word);
                 lemmaRepositories.save(newLemma);
-                saveSearchIndex(page,newLemma,countLemma);
+                saveSearchIndex(page, newLemma, countLemma);
             }
         }
     }
-    public void saveSearchIndex(Page page,Lemma lemma,int count){
+
+    public void saveSearchIndex(Page page, Lemma lemma, int count) {
         SearchIndex searchIndex = new SearchIndex();
         searchIndex.setPageId(page);
         searchIndex.setLemmaId(lemma);
         searchIndex.setRank(count);
         searchIndexRepositories.save(searchIndex);
     }
+
     public SiteTable siteId(Site site) {
         List<SiteTable> sites = siteRepositories.findAll();
         Optional<SiteTable> matchingSite = sites.stream()

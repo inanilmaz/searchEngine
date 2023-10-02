@@ -22,7 +22,7 @@ public class Indexing {
     private SitesList sitesList;
     @Autowired
     private SiteAndPageTableService siteAndPageTableService;
-    private Map<String, Boolean> indexingStatusMap;
+    private final Map<String, Boolean> indexingStatusMap;
     private boolean shouldStop = false;
 
     public Indexing() {
@@ -31,10 +31,7 @@ public class Indexing {
     }
 
     public boolean isIndexingInProgress() {
-        if(!fjp.isShutdown()){
-            return false;
-        }else {
-            return true;}
+        return fjp.isShutdown();
     }
 
     public void startIndexing() {

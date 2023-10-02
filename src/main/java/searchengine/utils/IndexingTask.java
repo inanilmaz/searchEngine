@@ -18,11 +18,10 @@ public class IndexingTask extends RecursiveTask<Boolean> {
     private Connection.Response response = null;
 
     private final SiteAndPageTableService siteAndPageTableService;
-    private String url;
+    private final String url;
     private final HashSet<String> uniqPage;
     private final String domain;
     private final PageRepositories pageRepositories;
-    private static final Object lock = new Object();
     private volatile boolean shouldStop = false;
 
     public IndexingTask(String url, String domain, SiteAndPageTableService siteAndPageTableService,
