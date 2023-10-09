@@ -66,6 +66,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                 total.setPages(total.getPages() + pages);
                 total.setLemmas(total.getLemmas() + lemmas);
                 detailed.add(item);
+
             }
         }
         StatisticsResponse response = new StatisticsResponse();
