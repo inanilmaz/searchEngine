@@ -10,6 +10,7 @@ import searchengine.dto.statistics.StatisticsData;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.dto.statistics.TotalStatistics;
 import searchengine.model.SiteTable;
+import searchengine.model.StatusEnum;
 import searchengine.repositories.LemmaRepositories;
 import searchengine.repositories.PageRepositories;
 import searchengine.repositories.SiteRepositories;
@@ -39,22 +40,34 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
         List<Site> sitesList = sites.getSites();
         for (Site site : sitesList) {
-            SiteTable siteTable = siteRepositories.findByUrl(site.getUrl());
             DetailedStatisticsItem item = new DetailedStatisticsItem();
-            item.setName(site.getName());
-            item.setUrl(site.getUrl());
-            int pages = (int) pageRepositories.count();
-            int lemmas = (int) lemmaRepositories.count();
-            item.setPages(pages);
-            item.setLemmas(lemmas);
-            item.setStatus(siteTable.getStatus());
-            item.setError(siteTable.getLastError() != null ? siteTable.getLastError() : "Ошибок нет!");
-            item.setStatusTime(siteTable.getStatusTime());
-            total.setPages(total.getPages() + pages);
-            total.setLemmas(total.getLemmas() + lemmas);
-            detailed.add(item);
+            SiteTable siteTable = siteRepositories.findByUrl(site.getUrl());
+            if(siteTable == null){
+                item.setName(site.getName());
+                item.setUrl(site.getUrl());
+                item.setPages(0);
+                item.setLemmas(0);
+                item.setStatus(StatusEnum.FAILED);
+                item.setError("");
+                total.setPages(0);
+                total.setIndexing(false);
+                total.setLemmas(0);
+                detailed.add(item);
+            }else {
+                item.setName(site.getName());
+                item.setUrl(site.getUrl());
+                int pages = (int) pageRepositories.count();
+                int lemmas = (int) lemmaRepositories.count();
+                item.setPages(pages);
+                item.setLemmas(lemmas);
+                item.setStatus(siteTable.getStatus());
+                item.setError(siteTable.getLastError() != null ? siteTable.getLastError() : "Ошибок нет!");
+                item.setStatusTime(siteTable.getStatusTime());
+                total.setPages(total.getPages() + pages);
+                total.setLemmas(total.getLemmas() + lemmas);
+                detailed.add(item);
+            }
         }
-
         StatisticsResponse response = new StatisticsResponse();
         StatisticsData data = new StatisticsData();
         data.setTotal(total);
