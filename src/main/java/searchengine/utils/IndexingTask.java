@@ -6,32 +6,26 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import searchengine.model.Page;
-import searchengine.repositories.PageRepositories;
+import searchengine.model.Task;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.HashSet;
 import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class IndexingTask extends RecursiveTask<Boolean> {
 
     private Connection.Response response = null;
 
-    private final SiteAndPageTableService siteAndPageTableService;
-    private final String url;
-    private final HashSet<String> uniqPage;
-    private final String domain;
-    private final PageRepositories pageRepositories;
-    private volatile boolean shouldStop = false;
+    private final Task task;
+    private final AtomicBoolean shouldStop;
+    private final SaveLemma lemmaServise;
 
-    public IndexingTask(String url, String domain, SiteAndPageTableService siteAndPageTableService,
-                        HashSet<String> uniqPage, PageRepositories pageRepositories, boolean shouldStop) {
+
+    public IndexingTask(Task task, AtomicBoolean shouldStop) {
+        this.task = task;
         this.shouldStop = shouldStop;
-        this.siteAndPageTableService = siteAndPageTableService;
-        this.url = url;
-        this.uniqPage = uniqPage;
-        this.domain = domain;
-        this.pageRepositories = pageRepositories;
+        lemmaServise = new SaveLemma(task.getLemmaRepositories(),task.getSearchIndexRepositories());
     }
 
     public synchronized void threadSleep() {
@@ -69,23 +63,33 @@ public class IndexingTask extends RecursiveTask<Boolean> {
         Elements links = doc.select("a[href]");
         for (Element link : links) {
             String href = link.attr("abs:href");
-            if (checkPage(href, url) && uniqPage.add(href)) {
+            if (checkPage(href, task.getUrl()) && task.getUniqPage().add(href)) {
                 String content = doc.getAllElements().toString();
-                Page page = siteAndPageTableService.createNewPage(statusCode, href, content);
-                pageRepositories.save(page);
-                IndexingTask task = new IndexingTask(href, this.domain,
-                        siteAndPageTableService,
-                        uniqPage, pageRepositories,shouldStop);
-                task.fork();
-                task.join();
-                siteAndPageTableService.updateDateTime();
+                Page page = task.getSiteAndPageTableService().createNewPage(statusCode, href, content);
+                task.getPageRepositories().save(page);
+                saveLemma(doc,page,statusCode);
+                task.setUrl(href);
+                IndexingTask fjpTask = new IndexingTask(task,shouldStop);
+                fjpTask.fork();
+                fjpTask.join();
+                task.getSiteAndPageTableService().updateDateTime();
                 threadSleep();
             }
         }
     }
+    public void saveLemma(Document doc, Page page, int statusCode){
+        if (statusCode != 400 && statusCode != 500) {
+            try {
+                lemmaServise.saveOrUpdateLemma(doc, page);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            System.out.println("SaveLemma");
+        }
+    }
 
     public void parsePage() throws IOException {
-        response = Jsoup.connect(url)
+        response = Jsoup.connect(task.getUrl())
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
                 .referrer("http://www.google.com")
                 .execute();
@@ -100,7 +104,7 @@ public class IndexingTask extends RecursiveTask<Boolean> {
             return true;
         } catch (IOException e) {
             System.out.println("compute exception: " + e);
-            siteAndPageTableService.updateStatusToFailed(e.getMessage(),domain);
+            task.getSiteAndPageTableService().updateStatusToFailed(e.getMessage(),task.getDomain());
             return false;
         }
     }

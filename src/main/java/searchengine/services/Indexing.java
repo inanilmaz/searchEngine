@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import searchengine.config.Site;
 import searchengine.config.SitesList;
+import searchengine.model.Task;
+import searchengine.repositories.LemmaRepositories;
 import searchengine.repositories.PageRepositories;
+import searchengine.repositories.SearchIndexRepositories;
 import searchengine.utils.IndexingTask;
 import searchengine.utils.SiteAndPageTableService;
 
@@ -12,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 public class Indexing {
@@ -22,8 +26,12 @@ public class Indexing {
     private SitesList sitesList;
     @Autowired
     private SiteAndPageTableService siteAndPageTableService;
+    @Autowired
+    private SearchIndexRepositories searchIndexRepositories;
+    @Autowired
+    private LemmaRepositories lemmaRepositories;
     private final Map<String, Boolean> indexingStatusMap;
-    private boolean shouldStop = false;
+    private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
     public Indexing() {
         fjp = new ForkJoinPool();
@@ -42,8 +50,15 @@ public class Indexing {
         for (Site site : sitesList.getSites()) {
             String url = site.getUrl();
             siteAndPageTableService.createNewSite(site);
-            Boolean isIndexing = fjp.invoke(new IndexingTask(url, url, siteAndPageTableService,
-                    new HashSet<>(), pageRepositories, shouldStop));
+            Task task = new Task();
+            task.setUrl(url);
+            task.setDomain(url);
+            task.setSiteAndPageTableService(siteAndPageTableService);
+            task.setUniqPage(new HashSet<>());
+            task.setPageRepositories(pageRepositories);
+            task.setSearchIndexRepositories(searchIndexRepositories);
+            task.setLemmaRepositories(lemmaRepositories);
+            Boolean isIndexing = fjp.invoke(new IndexingTask(task,shouldStop));
             siteAndPageTableService.updateStatusToIndexed();
             if (!isIndexing) {
                 siteAndPageTableService.updateStatusToFailed(
@@ -60,7 +75,7 @@ public class Indexing {
             for (String url : indexingStatusMap.keySet()) {
                 Boolean isIndexingSuccessful = indexingStatusMap.get(url);
                 if (!isIndexingSuccessful) {
-                    shouldStop = true;
+                    shouldStop.set(true);
                     siteAndPageTableService.updateStatusToFailed("Индексация остановлена пользователем", url);
                 }
             }

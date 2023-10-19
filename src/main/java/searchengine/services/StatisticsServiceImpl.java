@@ -36,7 +36,6 @@ public class StatisticsServiceImpl implements StatisticsService {
         TotalStatistics total = new TotalStatistics();
         total.setSites(sites.getSites().size());
         total.setIndexing(true);
-
         List<DetailedStatisticsItem> detailed = new ArrayList<>();
         List<Site> sitesList = sites.getSites();
         for (Site site : sitesList) {
@@ -66,7 +65,6 @@ public class StatisticsServiceImpl implements StatisticsService {
                 total.setPages(total.getPages() + pages);
                 total.setLemmas(total.getLemmas() + lemmas);
                 detailed.add(item);
-
             }
         }
         StatisticsResponse response = new StatisticsResponse();

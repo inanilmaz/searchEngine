@@ -85,12 +85,14 @@ public class ReIndexingPage {
             int countLemma = lemmasMap.get(word);
             Optional<Lemma> existingLemmaOpt = lemmaRepositories.findByLemma(word);
             if (existingLemmaOpt.isPresent()) {
+                System.out.println("saveOrUpdateLemma method : update lemma");
                 Lemma existingLemma = existingLemmaOpt.get();
                 int count = existingLemma.getFrequency() + countLemma;
                 existingLemma.setFrequency(count);
                 lemmaRepositories.save(existingLemma);
                 saveSearchIndex(page, existingLemma, count);
             } else {
+                System.out.println("saveOrUpdateLemma method: new Lemma save");
                 Lemma newLemma = new Lemma();
                 newLemma.setSiteId(siteTable);
                 newLemma.setFrequency(countLemma);
